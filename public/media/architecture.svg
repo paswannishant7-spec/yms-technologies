@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#01040a"/>
+      <stop offset=".63" stop-color="#102039"/>
+      <stop offset="1" stop-color="#25344f"/>
+    </linearGradient>
+    <linearGradient id="wall">
+      <stop stop-color="#040811"/>
+      <stop offset=".82" stop-color="#101a2c"/>
+      <stop offset="1" stop-color="#263953"/>
+    </linearGradient>
+    <linearGradient id="glass">
+      <stop stop-color="#324865" stop-opacity="0"/>
+      <stop offset=".9" stop-color="#324865" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#9cb8dd" stop-opacity=".27"/>
+    </linearGradient>
+    <linearGradient id="floor" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#283f5c"/>
+      <stop offset=".12" stop-color="#14243e"/>
+      <stop offset=".52" stop-color="#0a1527"/>
+      <stop offset="1" stop-color="#030711"/>
+    </linearGradient>
+    <radialGradient id="light">
+      <stop stop-color="#85b2ff" stop-opacity=".54"/>
+      <stop offset=".42" stop-color="#5084e1" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#5084e1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="strip">
+      <stop stop-color="#6b9ceb" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#badbff" stop-opacity=".79"/>
+      <stop offset="1" stop-color="#76aaff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1920v1080H0z"/>
+  <path d="M0 0h583l392 702H0V0Z" fill="#030913"/>
+  <path d="M0 0h310l525 705H0V0Z" fill="url(#wall)"/>
+  <path d="M365 0h64l522 705h-35L365 0Z" fill="#283853" opacity=".26"/>
+  <path d="M493 0h83l460 705h-30L493 0Z" fill="url(#glass)" opacity=".56"/>
+  <path d="M1920 0h-239l-457 705h696V0Z" fill="#07111f"/>
+  <path d="M1920 0h-98l-483 705h581V0Z" fill="url(#glass)" opacity=".38"/>
+  <path d="M1621 0h-88l-302 705h42L1621 0Z" fill="url(#glass)" opacity=".52"/>
+  <path d="m1723 0-449 705m523-705-468 705M307 0l523 705M585 0l456 705" stroke="#6985af" stroke-opacity=".17"/>
+  <path d="M715 0h713l-186 715h-179L715 0Z" fill="#2a5383" opacity=".13"/>
+  <path d="M960 0h338l-99 715h-107L960 0Z" fill="#4681c4" opacity=".075"/>
+  <path d="M0 705h1920v375H0z" fill="url(#floor)"/>
+  <ellipse cx="1131" cy="707" rx="571" ry="179" fill="url(#light)" opacity=".55"/>
+  <ellipse cx="1137" cy="831" rx="455" ry="83" fill="url(#light)" opacity=".42"/>
+  <path d="M0 706h1920" stroke="url(#strip)" stroke-width="2"/>
+  <path d="M0 707h1920" stroke="url(#strip)" stroke-width="5" opacity=".15"/>
+  <g stroke="#9ebfeb" stroke-opacity=".12">
+    <path d="M720 1080l409-375M272 1080l854-375M940 1080l189-375m76 375-72-375m392 375-390-375m785 352-782-352M0 873h1920M0 778h1920M0 733h1920M0 1015h1920"/>
+  </g>
+  <path d="M724 841h808" stroke="url(#strip)" opacity=".34"/>
+</svg>

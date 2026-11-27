@@ -1,0 +1,43 @@
+{
+  "name": "yms-technologies",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "assets:brand": "node scripts/prepare-brand-assets.mjs",
+    "assets:scenes": "node scripts/capture-scenes.mjs",
+    "qa:artifacts": "node scripts/capture-qa.mjs",
+    "qa:delivery": "node scripts/test-delivery.mjs"
+  },
+  "dependencies": {
+    "@fontsource/barlow-condensed": "^5",
+    "@fontsource-variable/manrope": "^5",
+    "@react-three/drei": "^10",
+    "@react-three/fiber": "^9",
+    "gsap": "^3",
+    "next": "^16.2",
+    "react": "^19.2",
+    "react-dom": "^19.2",
+    "three": "^0.184.0",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.184.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4",
+    "typescript": "^5.9"
+  }
+}
