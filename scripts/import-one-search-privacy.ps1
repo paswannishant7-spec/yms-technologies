@@ -20,9 +20,17 @@ $baseLine = 'const githubBasePath = githubPages ? "/one-search-privacy" : "";'
 if (-not $standalone.Contains($baseLine)) { throw 'Review the privacy project base-path configuration before importing.' }
 $standalone.Replace($baseLine, 'const githubBasePath = process.env.NEXT_PUBLIC_BASE_PATH || (githubPages ? "/one-search-privacy" : "");') |
   Set-Content -LiteralPath $config -Encoding utf8
+$logo = Join-Path $stage 'components/logo.tsx'
+(Get-Content -Raw -LiteralPath $logo).Replace('src="/one-search-logo.jpg"', 'src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/one-search-logo.jpg`}').Replace('width={96}', 'width={64}').Replace('height={96}', 'height={64}').Replace('alt=""', 'alt="One Search"') |
+  Set-Content -LiteralPath $logo -Encoding utf8
 $layout = Join-Path $stage 'app/layout.tsx'
-(Get-Content -Raw -LiteralPath $layout).Replace('{children}', '{children}<div className="section-shell" style={{ paddingBlock: "1rem 2rem" }}><a href="/products/one-search">Return to One Search</a></div>') |
+(Get-Content -Raw -LiteralPath $layout).Replace('{children}', '{children}<a className="yms-privacy-return" href="/products/one-search">← Back to YMS Technologies</a>') |
   Set-Content -LiteralPath $layout -Encoding utf8
+Add-Content -LiteralPath (Join-Path $stage 'app/globals.css') -Value @'
+.brand .brand__mark { display: block; width: clamp(46px, 5vw, 62px); height: auto; aspect-ratio: 1; object-fit: contain; opacity: 1; }
+.yms-privacy-return { position: absolute; z-index: 3; top: 84px; right: max(20px, calc((100vw - 1320px) / 2)); display: inline-block; padding: 5px 10px; border-radius: 6px; background: #fff4e8; color: #231810; font-size: .8rem; font-weight: 650; text-decoration: underline; }
+@media (max-width: 640px) { .yms-privacy-return { top: 70px; right: 16px; } }
+'@
 
 $formerBase = $env:NEXT_PUBLIC_BASE_PATH
 Push-Location -LiteralPath $stage

@@ -103,7 +103,7 @@ export function OneSearchPage({ breadcrumb }: { breadcrumb: ReactNode }) {
     </section>
     <footer className="one-search-close">
       <div className="wrap"><Image src="/media/one-search-logo.webp" alt="" width={52} height={52} unoptimized />
-        <p>Choose a category to explore the One Search interface.</p><Link className="button" href="#one-search-tour">Return to the walkthrough</Link><PrivacyLink className="inline-link product-privacy-link" /></div>
+        <p>Choose a category to explore the One Search interface.</p><Link className="button" href="#one-search-tour">Return to the walkthrough</Link><Link className="button" href="/contact#project-enquiry">Start a project</Link><PrivacyLink className="inline-link product-privacy-link" /></div>
     </footer>
   </article>;
 }

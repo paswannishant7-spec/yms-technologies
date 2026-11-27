@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { business } from "@/content/business";
 import { enquirySchema } from "@/content/enquiries";
-import { deliverySettings, enabledKind, readEnquiry, withinEnquiryLimit } from "@/server/enquiries";
+import { deliverySettings, enabledKind, projectDeliveryAvailable, readEnquiry, withinEnquiryLimit } from "@/server/enquiries";
 
 function reply(status: number, message: string, retry = false) {
   return NextResponse.json({ message }, {
@@ -31,11 +31,11 @@ export async function POST(request: Request) {
   }
   const enquiry = enquirySchema.safeParse(body);
   if (!enquiry.success) return reply(422, "Check the name, email, topic, enquiry and permission to reply.");
-  const { kind, requestId, name, email, area, message } = enquiry.data;
+  const { kind, requestId, name, email, area, message, project } = enquiry.data;
   if (!enabledKind(kind)) return reply(404, "This enquiry type is unavailable.");
 
   const delivery = deliverySettings();
-  if (!delivery) return reply(503, "Online submissions are currently unavailable.");
+  if (!delivery || (kind === "project" && !projectDeliveryAvailable())) return reply(503, "Online submissions are currently unavailable.");
   try {
     if (!await withinEnquiryLimit(request)) return reply(429, "Too many enquiries. Please try again in a few minutes.", true);
     const sent = await fetch(delivery.url, {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${delivery.token}`,
         "Idempotency-Key": requestId,
       },
-      body: JSON.stringify({ requestId, kind, name, email, area, message, consent: true }),
+      body: JSON.stringify({ requestId, kind, name, email, area, message, consent: true, ...(project && { project }) }),
       redirect: "error",
       cache: "no-store",
       signal: AbortSignal.timeout(7000),

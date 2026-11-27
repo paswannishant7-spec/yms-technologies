@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Closing, FAQList, ProductFeature, SectionHeading, ServiceLinks } from "@/components/sections";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { Experience, Process } from "@/components/experience";
@@ -12,7 +13,7 @@ import { StructuredData } from "@/components/structured-data";
 import { business } from "@/content/business";
 import { metadataFor } from "@/content/metadata";
 import { isPublished, pages, publishedPaths, routeVisible } from "@/content/pages";
-import { deliverySettings, enabledKind } from "@/server/enquiries";
+import { deliverySettings, enabledKind, projectDeliveryAvailable } from "@/server/enquiries";
 
 type Props = { params: Promise<{ slug: string[] }> };
 const viewSteps = {
@@ -55,9 +56,31 @@ export default async function InteriorPage({ params }: Props) {
   const page = pages[path];
   const layout = page.layout ?? "legal";
   if (layout === "product") return <><StructuredData path={path} /><OneSearchPage breadcrumb={<Breadcrumbs path={path} />} /></>;
+  if (layout === "contact") {
+    await connection();
+    return <article className="interior interior-contact">
+      <StructuredData path={path} />
+      <div className="wrap page-breadcrumb"><Breadcrumbs path={path} /></div>
+      <section className="wrap contact-grid">
+        <div className="contact-sidebar">
+          <p className="eyebrow"><span />Let&apos;s build together</p>
+          <h1 data-route-reveal>Your next big idea <Handwritten>starts here.</Handwritten></h1>
+          <p data-route-copy>Tell us what you want to build, who it&apos;s for and when you need it. We&apos;ll use that to start the conversation.</p>
+          {business.email && <p><a href={`mailto:${business.email}`}>{business.email}</a></p>}
+          {business.phone && <p><a href={`tel:${business.phone}`}>{business.phone}</a></p>}
+          <Experience id="brand" className="contact-art" />
+        </div>
+        <section id="project-enquiry" tabIndex={-1} aria-labelledby="enquiry-title" className="contact-panel">
+          <h2 id="enquiry-title">Project enquiry</h2>
+          <EnquiryForm initialKind="project" available={projectDeliveryAvailable()} email={business.email}
+            privacyHref={isPublished("/privacy-policy") ? "/privacy-policy" : undefined} />
+        </section>
+      </section>
+    </article>;
+  }
   const service = layout === "service";
   const operational = Boolean(deliverySettings());
-  const stage = page.scene && layout !== "contact";
+  const stage = page.scene;
 
   return (
     <article className={`interior interior-${layout} interior-${page.scene ?? "text"}`}>
@@ -67,27 +90,13 @@ export default async function InteriorPage({ params }: Props) {
       <header className={`interior-hero wrap ${stage ? "with-stage" : ""}`}>
         <div className="interior-title">
           <p className="eyebrow"><span />{page.eyebrow ?? (page.draft ? "Development preview" : page.title)}</p>
-          <h1 data-route-reveal>{page.headline ?? page.title}
-            {layout === "contact" && <> <Handwritten>Let&apos;s make it happen.</Handwritten></>}
-          </h1>
+          <h1 data-route-reveal>{page.headline ?? page.title}</h1>
           <p className="interior-description" data-route-copy>{page.description}</p>
-          {service && !page.draft && <Link className="button" href="/contact" data-route-copy>Discuss your project <Icon name="up-right" size={16} /></Link>}
+          {service && !page.draft && <Link className="button" href="/contact#project-enquiry" data-route-copy>Discuss your project <Icon name="up-right" size={16} /></Link>}
         </div>
         {stage && page.scene && <Experience id={page.scene} className="interior-art"
           steps={service && page.scene in viewSteps ? viewSteps[page.scene as keyof typeof viewSteps] : undefined} />}
       </header>
-      {layout === "contact" && (
-        <section className="section wrap contact-grid">
-          <div className="contact-sidebar">
-            <SectionHeading label="Contact">Tell us what you have in mind.</SectionHeading>
-            <p>Share the audience, the problem and any timing or technical requirements you already know.</p>
-            {business.email && <p><a href={`mailto:${business.email}`}>{business.email}</a></p>}
-            {business.phone && <p><a href={`tel:${business.phone}`}>{business.phone}</a></p>}
-            <Experience id="brand" className="contact-art" />
-          </div>
-          <EnquiryForm initialKind="project" available={operational} email={business.email} />
-        </section>
-      )}
       {layout === "services" && <section className="section wrap"><SectionHeading label="Explore our services">Choose where to begin.</SectionHeading><ServiceLinks /></section>}
       {layout === "products" && <section className="section wrap"><SectionHeading label="Our digital products">Explore One Search.</SectionHeading><ProductFeature /></section>}
       {layout === "support" && (

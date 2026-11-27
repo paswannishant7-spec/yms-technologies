@@ -83,7 +83,7 @@ function Navigation({ path, entries }: { path: string; entries: readonly NavItem
             })}
           </ul>
         </nav>
-        <Link className="button nav-cta" href="/contact" onClick={close}>Start a project <Icon name="up-right" size={14} /></Link>
+        <Link className="button nav-cta" href="/contact#project-enquiry" onClick={close}>Start a project <Icon name="up-right" size={14} /></Link>
       </div>
     </header>
   );

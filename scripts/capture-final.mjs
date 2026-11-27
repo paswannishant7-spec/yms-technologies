@@ -202,16 +202,16 @@ try {
     if (!onlyVideo || onlyVideo === "privacy-navigation") await record("privacy-navigation", async (page) => {
       await visit(page, product);
       await goTo(page, "#one-search-help");
-      await page.getByRole("link", { name: /Privacy Policy/ }).first().click();
-      await page.waitForURL((url) => url.pathname === privacy);
-      const pause = page.getByRole("button", { name: "Pause motion" });
+      const [draft] = await Promise.all([page.waitForEvent("popup"), page.getByRole("link", { name: /Privacy Policy/ }).first().click()]);
+      await draft.waitForURL((url) => url.pathname === privacy);
+      const pause = draft.getByRole("button", { name: "Pause motion" });
       await pause.waitFor();
       await page.waitForTimeout(650);
       await pause.scrollIntoViewIfNeeded();
       await pause.click();
       await page.waitForTimeout(550);
-      await page.getByRole("link", { name: "Return to One Search" }).click();
-      await page.waitForURL((url) => url.pathname === product);
+      await draft.getByRole("link", { name: "Back to YMS Technologies" }).click();
+      await draft.waitForURL((url) => url.pathname === product);
       await page.waitForTimeout(700);
     });
   }

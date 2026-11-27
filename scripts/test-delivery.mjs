@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { chromium } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
 import { spawn, execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rmdir, unlink } from "node:fs/promises";
@@ -48,7 +50,7 @@ try {
     stdio: ["ignore", "inherit", "inherit"],
   });
   let ready = false;
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 120; attempt++) {
     if (app.exitCode !== null) throw new Error("Local test app exited");
     try { ready = (await fetch(origin, { signal: AbortSignal.timeout(1000) })).ok; } catch {}
     if (ready) break;
@@ -63,11 +65,45 @@ try {
   const submit = (fields) => fetch(`${origin}/api/enquiries`, {
     method: "POST", headers: { Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(fields),
   });
-  const accepted = await submit(base);
-  assert.equal(accepted.status, 202);
-  assert.equal((await accepted.json()).message, "Your enquiry was received.");
-  assert.equal(deliveries.get(base.requestId)?.email, base.email);
-  assert.equal((await submit(base)).status, 202);
+  const browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL ?? "chrome" });
+  let received;
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1050 }, reducedMotion: "reduce" });
+    await page.goto(origin + "/contact");
+    const button = page.getByRole("button", { name: "Send enquiry" });
+    await button.click();
+    assert.equal(await page.locator('input[name="name"]').evaluate((input) => input.validity.valueMissing), true);
+    assert.equal(deliveries.size, 0);
+    await page.getByLabel("Full name").fill(base.name);
+    await page.getByLabel("Email address").fill(base.email);
+    await page.locator('input[name="company"]').fill("Example Company");
+    await page.locator('input[name="phone"]').fill("+1 555 0100");
+    await page.locator('input[name="budget"]').fill("Exploring budgets");
+    await page.locator('input[name="timeline"]').fill("Next quarter");
+    await page.getByLabel("Project description").fill(base.message);
+    await page.getByLabel(/You may use these details/).check();
+    await button.click();
+    await page.getByText("Select at least one service.", { exact: true }).waitFor();
+    await page.getByRole("checkbox", { name: "Mobile App Development" }).check();
+    await page.getByRole("checkbox", { name: "Web Development" }).check();
+    await button.click();
+    await page.getByText("Your enquiry was received.", { exact: true }).waitFor();
+    received = Array.from(deliveries.values())[0];
+    assert.equal(received.email, base.email);
+    assert.deepEqual(received.project.services, ["Mobile App Development", "Web Development"]);
+    assert.equal(received.project.company, "Example Company");
+    if (process.env.CONTACT_SCREENSHOTS === "true") {
+      await mkdir("artifacts/lock", { recursive: true });
+      for (const [label, viewport] of [["desktop", { width: 1440, height: 1050 }], ["mobile", { width: 390, height: 844 }]]) {
+        await page.setViewportSize(viewport);
+        await page.goto(origin + "/contact");
+        await page.locator(".contact-art img").evaluate((image) => image.decode());
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+        await page.screenshot({ path: `artifacts/lock/contact-${label}.png`, fullPage: true });
+      }
+    }
+  } finally { await browser.close(); }
+  assert.equal((await submit({ ...base, requestId: received.requestId, project: received.project })).status, 202);
   assert.equal(deliveries.size, 1);
   const support = { ...base, requestId: randomUUID(), kind: "support", area: "Railway" };
   assert.equal((await submit(support)).status, 202);

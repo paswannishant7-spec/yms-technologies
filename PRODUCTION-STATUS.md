@@ -1,8 +1,16 @@
 # YMS Technologies · Technology in Motion
 
+## Production lock
+
+The recovery checkpoint is `2001516`. The production-lock preview runs on [127.0.0.1:3014](http://127.0.0.1:3014). [Contact and project enquiry](http://127.0.0.1:3014/contact#project-enquiry) · [One Search](http://127.0.0.1:3014/products/one-search) · [Loopback privacy draft](http://127.0.0.1:3014/products/one-search/privacy-policy).
+
+- The privacy export previously requested its logo from the main site's root. The staged importer now prefixes the image URL, preserves the original JPEG byte for byte, and puts an accessible return link near the top. Product privacy links open a new tab directly.
+- Project CTAs use `/contact#project-enquiry`. The form reads delivery settings at request time and sends the existing payload plus optional project details under `project`. The first selected service populates the legacy `area` field. The receiver gets all selected services and any company, phone, budget and timeline values supplied by the visitor.
+- Configure `FORM_DELIVERY_URL` and `FORM_DELIVERY_TOKEN` at runtime. A public project form also requires a published, approved corporate privacy notice at `/privacy-policy`. Legal entity, official domain, the separate One Search policy approval and the live receiver remain release requirements.
+
 ## Current state
 
-The Next.js App Router production preview is available at [127.0.0.1:3012](http://127.0.0.1:3012). The [One Search product page](http://127.0.0.1:3012/products/one-search) and [draft privacy experience](http://127.0.0.1:3012/products/one-search/privacy-policy) are part of that local preview. Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
+The Next.js App Router production preview is available at [127.0.0.1:3014](http://127.0.0.1:3014). The [One Search product page](http://127.0.0.1:3014/products/one-search) and [draft privacy experience](http://127.0.0.1:3014/products/one-search/privacy-policy) are part of that local preview. Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
 
 The checkpoint immediately before the consolidated production pass is `efc0a13`. The original site and the first daylight redesign are recoverable at `a7b4f6e` and `9ed98e3`.
 
@@ -62,7 +70,7 @@ Routes marked `draft` in `src/content/pages.ts` display a publication note in de
 | Liquid Fill | App Development and Products |
 | Square Morph | Services and Web Development |
 | Chasing Squares | Digital Marketing, Insights and scoped Work previews |
-| Battery Charge | One Search, product support, Support Centre and the orange privacy transition |
+| Battery Charge | One Search, product support and Support Centre |
 | Bouncing Ball | About, Careers, Industries and Contact |
 
 Navigation requests start immediately. Fast routes complete the signature and reveal in about 0.93 seconds. A timeout clears interrupted or stalled in-app transitions. Direct visits keep the content usable under a small, decorative introductory mark. Reduced motion skips the overlay, and same-page controls use their local transitions.
@@ -71,7 +79,7 @@ Navigation requests start immediately. Fast routes complete the signature and re
 
 The original sibling `Landing page` project identifies itself as the One Search Privacy Center. Its source marks the legal copy **Draft 0.1** and includes unverified references to creative-media, AI and face processing. Legal identity, effective date, app data practices, vendors and contact or deletion operations still require confirmation. The integrated static export preserves the original language, layout, styling, navigation, motion and reader. A return link connects to One Search. The source contains no background video files, so the original pauseable animated fallback remains active. The integration introduces no public policy claim.
 
-Only loopback can serve the draft when `YMS_LOCAL_PRIVACY_PREVIEW=true` and `SITE_URL` is unset. The route responds with `noindex, nofollow` and stays outside the sitemap. The compiled independent assets reside in `privacy-export/`, outside the public asset folder. The original source and media were hash-checked unchanged. To refresh the generated export, run `powershell -File scripts/import-one-search-privacy.ps1` with the source dependencies already installed. The import builds a staged copy and rewrites the base path and return link only.
+Only loopback can serve the draft when `YMS_LOCAL_PRIVACY_PREVIEW=true` and `SITE_URL` is unset. The route responds with `noindex, nofollow` and stays outside the sitemap. The compiled independent assets reside in `privacy-export/`, outside the public asset folder. The original source and media were hash-checked unchanged. To refresh the generated export, run `powershell -File scripts/import-one-search-privacy.ps1` with the source dependencies already installed. The import builds a staged copy and sets the base path, namespaced logo and return link.
 
 ## Development and deployment
 
@@ -89,10 +97,10 @@ npm run typecheck
 npm run lint
 $env:YMS_LOCAL_PRIVACY_PREVIEW='true'
 npm run build
-npm start -- --hostname 127.0.0.1 --port 3012
+npm start -- --hostname 127.0.0.1 --port 3014
 # In a separate terminal
 $env:YMS_LOCAL_PRIVACY_PREVIEW='true'
-$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3012'
+$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3014'
 npm test
 ```
 

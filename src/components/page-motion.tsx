@@ -39,6 +39,10 @@ export function PageMotion() {
         }, product ? .08 : .02);
         entrance.from("[data-route-art]:not(.one-search-lockup)", { y: product ? 19 : 8, opacity: .75, duration: .73, ease: "power3.out", clearProps: "transform,opacity" }, .11);
         entrance.from("[data-route-copy]", { y: 10, opacity: .7, duration: .47, stagger: .055, ease: "power2.out", clearProps: "transform,opacity" }, .29);
+        if (pathname === "/contact") {
+          entrance.from(".contact-sidebar [data-underline]", { strokeDashoffset: 1, duration: .5, clearProps: "strokeDashoffset" }, .2);
+          entrance.from(".contact-panel .enquiry-form > fieldset > :not(.form-trap)", { opacity: .75, duration: .26, stagger: .025, clearProps: "opacity" }, .16);
+        }
       }
       if (!changed && performance.now() < 900) gsap.fromTo(".nav-shell", { y: -6, opacity: .82 }, {
         y: 0, opacity: 1, duration: .34, ease: "power2.out", clearProps: "opacity,transform",

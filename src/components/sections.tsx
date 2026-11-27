@@ -52,7 +52,7 @@ export function Closing({ title = "Let's build what's next.", accent, descriptio
     <section className="closing">
       <div className="wrap closing-shell">
         <div><p className="eyebrow"><span />Project enquiries</p><h2 data-scroll-reveal>{title}{accent && <> <Handwritten>{accent}</Handwritten></>}</h2><p>{description}</p></div>
-        <Link className="button button-solid" href="/contact">Start a project <Icon name="up-right" size={17} /></Link>
+        <Link className="button button-solid" href="/contact#project-enquiry">Start a project <Icon name="up-right" size={17} /></Link>
       </div>
     </section>
   );

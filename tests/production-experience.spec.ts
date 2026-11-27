@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
 import { productScreens } from "../src/content/one-search";
 
 const product = "/products/one-search";
@@ -89,12 +90,28 @@ test("privacy remains gated or opens its independent interactive draft on loopba
   expect(response.status()).toBe(enabled ? 200 : 404);
   expect(response.headers()["x-robots-tag"]).toContain("noindex");
   if (!enabled) return;
-  const failedMedia: string[] = [];
-  page.on("response", res => { if (res.url().includes(`${privacy}/`) && res.status() >= 400) failedMedia.push(res.url()); });
   await page.goto(`${product}#one-search-help`);
-  await page.getByRole("link", { name: /Privacy Policy/ }).first().click();
-  await expect(page.locator('.route-transition[data-privacy="true"]')).toHaveAttribute("data-loader", "battery");
+  const original = page;
+  const failedMedia: string[] = [];
+  original.context().on("response", res => { if (res.url().includes(`${privacy}/`) && res.status() >= 400) failedMedia.push(res.url()); });
+  const [popup] = await Promise.all([original.waitForEvent("popup"), original.getByRole("link", { name: /Privacy Policy.*new tab/ }).first().click()]);
+  page = popup;
+  await expect(original).toHaveURL(/one-search#one-search-help$/);
+  await expect(original.locator(".route-transition")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`${privacy}$`));
+  const mark = page.getByRole("img", { name: "One Search", exact: true }).first();
+  await expect(mark).toBeVisible();
+  await expect(mark).toHaveJSProperty("naturalWidth", 513);
+  if (process.env.LOCK_SCREENSHOTS === "true") {
+    await mkdir("artifacts/lock", { recursive: true });
+    for (const [label, viewport] of [["desktop", { width: 1440, height: 960 }], ["mobile", { width: 390, height: 844 }]] as const) {
+      await page.setViewportSize(viewport);
+      await expect(mark).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(viewport.width);
+      await page.screenshot({ path: `artifacts/lock/privacy-${label}.png` });
+    }
+    await page.setViewportSize({ width: 1440, height: 960 });
+  }
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/Draft 0\.1/i).first()).toBeVisible();
   await expect(page.getByRole("img", { name: /Animated abstract privacy network/i })).toBeVisible();
@@ -104,7 +121,7 @@ test("privacy remains gated or opens its independent interactive draft on loopba
   await expect(page).toHaveURL(new RegExp(`${privacy}/privacy-policy$`));
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/privacy policy/i);
   expect(failedMedia).toEqual([]);
-  await page.getByRole("link", { name: "Return to One Search" }).click();
+  await page.getByRole("link", { name: "Back to YMS Technologies" }).click();
   await expect(page).toHaveURL(new RegExp(`${product}$`));
   const staticContext = await browser.newContext({ javaScriptEnabled: false, baseURL });
   try {
@@ -112,4 +129,24 @@ test("privacy remains gated or opens its independent interactive draft on loopba
     await staticPage.goto(privacy);
     await expect(staticPage.getByText("Introduction and privacy commitment").last()).toBeVisible();
   } finally { await staticContext.close(); }
+});
+
+test("project CTAs land at the enquiry form on desktop and mobile", async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(width === 1440 ? "/services/web-development" : "/products/one-search");
+    const cta = width === 1440 ? page.getByRole("link", { name: "Discuss your project" }) : page.locator(".nav-cta");
+    await expect(cta).toHaveAttribute("href", "/contact#project-enquiry");
+    await cta.focus();
+    await Promise.all([
+      page.locator('.route-transition[data-loader="bounce"]').waitFor(),
+      page.keyboard.press("Enter"),
+    ]);
+    await expect(page).toHaveURL(/\/contact#project-enquiry$/);
+    await expect(page.locator(".route-transition")).toHaveCount(0);
+    await expect(page.locator("#project-enquiry")).toBeInViewport();
+    await expect(page.getByRole("textbox", { name: "Full name" })).toBeEditable();
+    await page.locator(".nav-cta").click();
+    await expect(page.locator(".route-transition")).toHaveCount(0);
+  }
 });

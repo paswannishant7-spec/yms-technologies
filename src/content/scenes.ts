@@ -37,7 +37,7 @@ export const scenes = [
   {
     id: "brand", label: "Technology in Motion", card: ["Let's build", "what's next"],
     title: ["Let's build", "what's next."], description: "Turning ambitious ideas into meaningful digital experiences.",
-    cta: "Start a Project", href: "/contact",
+    cta: "Start a Project", href: "/contact#project-enquiry",
     accent: "#0866e9", light: "#d9e9ff", background: "#f9f5e8",
     subtitle: "A sculpture inspired by the forward geometry of the YMS mark",
   },

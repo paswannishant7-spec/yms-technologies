@@ -13,7 +13,7 @@ export function RouteLoader() {
   const reduced = useReducedMotion();
   const current = useRef(pathname);
   const [initial, setInitial] = useState(true);
-  const job = useRef<{ path: string; start: number; timer: number; finish: number; document?: boolean } | null>(null);
+  const job = useRef<{ path: string; start: number; timer: number; finish: number } | null>(null);
   const [overlay, setOverlay] = useState<{ path: string; leaving: boolean } | null>(null);
 
   useEffect(() => {
@@ -22,11 +22,11 @@ export function RouteLoader() {
       window.clearTimeout(job.current?.finish);
       job.current = null;
     }
-    function start(path: string, documentNavigation = false) {
+    function start(path: string) {
       clear();
       setInitial(false);
       setOverlay({ path, leaving: false });
-      const transition = { path, start: performance.now(), timer: 0, finish: 0, document: documentNavigation };
+      const transition = { path, start: performance.now(), timer: 0, finish: 0 };
       job.current = transition;
       transition.timer = window.setTimeout(() => leave(path), 2400);
     }
@@ -49,25 +49,7 @@ export function RouteLoader() {
       if (!link || (link.target && link.target !== "_self") || link.hasAttribute("download")) return;
       const url = new URL(link.href);
       if (url.origin !== location.origin || url.pathname === current.current) return;
-      const documentNavigation = link.hasAttribute("data-privacy-link");
-      if (documentNavigation) {
-        event.preventDefault();
-        start(url.pathname, true);
-        const transition = job.current!;
-        const go = () => { if (job.current === transition) location.assign(url.href); };
-        // Begin retrieving the independent document while the battery charges.
-        void fetch(url.href).catch(() => {}).finally(() => {
-          if (job.current !== transition) return;
-          window.clearTimeout(transition.timer);
-          transition.timer = window.setTimeout(() => {
-            if (job.current !== transition) return;
-            setOverlay({ path: url.pathname, leaving: true });
-            transition.finish = window.setTimeout(go, 130);
-          }, Math.max(0, signature - (performance.now() - transition.start)));
-        });
-        window.clearTimeout(transition.timer);
-        transition.timer = window.setTimeout(go, 1800);
-      } else if (link.hasAttribute("data-route-loader") || url.pathname !== privacyPath) start(url.pathname);
+      if (url.pathname !== privacyPath) start(url.pathname);
     }
     function history() {
       if (location.pathname !== current.current) start(location.pathname);
@@ -75,7 +57,7 @@ export function RouteLoader() {
     function restored() { clear(); setOverlay(null); }
     function commit(event: Event) {
       const path = (event as CustomEvent<string>).detail;
-      if (job.current?.path === path && !job.current.document) leave(path);
+      if (job.current?.path === path) leave(path);
     }
     if (reduced) {
       const reset = window.requestAnimationFrame(restored);

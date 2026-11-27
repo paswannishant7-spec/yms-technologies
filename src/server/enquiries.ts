@@ -24,6 +24,10 @@ export function enabledKind(kind: EnquiryKind) {
     && (kind !== "deletion" || (process.env.ONE_SEARCH_DELETION_ENABLED === "true" && isPublished("/products/one-search/delete-account")));
 }
 
+export function projectDeliveryAvailable() {
+  return Boolean(deliverySettings()) && (!process.env.SITE_URL?.trim() || isPublished("/privacy-policy"));
+}
+
 const windowSeconds = 600;
 const limit = 6;
 const localCounts = new Map<string, { count: number; until: number }>();
