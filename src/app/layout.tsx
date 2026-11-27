@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { business } from "@/content/business";
 import { Footer, Header } from "@/components/site-chrome";
 import { PageMotion } from "@/components/page-motion";
+import { RouteLoader } from "@/components/route-loader";
 import "./globals.css";
+import "./route-loaders.css";
 
 const jakarta = localFont({
   src: "../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2",
@@ -16,7 +18,7 @@ const dm = localFont({
 });
 const caveat = localFont({
   src: "../../node_modules/@fontsource-variable/caveat/files/caveat-latin-wght-normal.woff2",
-  variable: "--font-caveat", weight: "400 700", display: "swap", adjustFontFallback: false,
+  variable: "--font-caveat", weight: "400 700", display: "swap", adjustFontFallback: false, preload: false,
 });
 
 export const metadata: Metadata = {
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main-content" tabIndex={-1}>{children}</main>
         <Footer />
         <PageMotion />
+        <RouteLoader />
       </body>
     </html>
   );

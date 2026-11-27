@@ -1,0 +1,49 @@
+.route-transition, .route-intro { --load-ink: #0c1d35; --load-blue: #0866e9; --load-gold: #ffc107; --load-paper: #eaf3fc; pointer-events: none; }
+.route-transition[data-privacy], .route-intro[data-privacy] { --load-ink: #24180e; --load-blue: #a84000; --load-gold: #ff982b; --load-paper: #fff1e1; }
+.route-transition { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; isolation: isolate; animation: loader-open 130ms ease-out both; }
+.loader-wipe { position: absolute; inset: 0; background: color-mix(in srgb, var(--load-paper) 97%, white); z-index: -1; }
+.route-intro { position: fixed; z-index: 45; right: 1.15rem; bottom: 1.15rem; width: 40px; height: 40px; display: grid; place-items: center; scale: .46; animation: loader-intro 900ms ease-out both; }
+.route-intro .loader-wipe { display: none; }
+.route-transition[data-phase="exit"] { animation: loader-exit 290ms cubic-bezier(.23,.72,.36,1) both; }
+.route-transition[data-phase="exit"] .loader-mark { animation: loader-expand 290ms ease-out both; }
+.route-transition[data-phase="exit"]:is([data-loader="square"],[data-loader="liquid"],[data-loader="battery"]) { animation-name: loader-sheet; }
+.loader-mark { display: grid; place-items: center; position: relative; flex: none; width: 76px; height: 76px; }
+.loader-mark > i { display: none; position: absolute; }
+
+[data-loader="orbit"] .loader-mark { border: 1px solid #0866e94a; border-radius: 50%; animation: loader-orbit 820ms linear infinite; }
+[data-loader="orbit"] .loader-mark::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--load-ink); }
+[data-loader="orbit"] .loader-mark > i:nth-child(-n+3) { display: block; width: 13px; height: 13px; border-radius: 50%; background: var(--load-blue); top: -7px; left: 31px; }
+[data-loader="orbit"] .loader-mark > i:nth-child(2) { top: 54px; left: 62px; background: var(--load-gold); }
+[data-loader="orbit"] .loader-mark > i:nth-child(3) { top: 52px; left: -1px; width: 8px; height: 8px; background: var(--load-ink); }
+
+[data-loader="liquid"] .loader-mark { width: 72px; height: 72px; overflow: hidden; border: 2px solid var(--load-ink); border-radius: 25px; }
+[data-loader="liquid"] .loader-mark > i:first-child { display: block; width: 118%; height: 106%; bottom: -6px; background: var(--load-blue); border-radius: 46% 57% 0 0 / 17% 15% 0 0; animation: loader-fill 850ms cubic-bezier(.2,.6,.3,1) alternate infinite; }
+[data-loader="liquid"] .loader-mark > i:nth-child(2) { display: block; width: 118%; height: 90%; bottom: -8px; opacity: .42; background: var(--load-gold); border-radius: 64% 32% 0 0 / 18% 13% 0 0; animation: loader-fill 850ms 80ms cubic-bezier(.2,.6,.3,1) alternate infinite; }
+
+[data-loader="square"] .loader-mark > i:first-child { display: block; width: 56px; height: 56px; border: 3px solid var(--load-blue); background: var(--load-gold); animation: loader-square 900ms ease-in-out infinite; }
+
+[data-loader="chase"] .loader-mark > i { display: block; width: 23px; height: 23px; border-radius: 5px; background: var(--load-blue); animation: loader-chase 820ms cubic-bezier(.44,0,.56,1) infinite; }
+[data-loader="chase"] .loader-mark > i:nth-child(2) { background: var(--load-gold); animation-delay: -205ms; }
+[data-loader="chase"] .loader-mark > i:nth-child(3) { animation-delay: -410ms; }
+[data-loader="chase"] .loader-mark > i:nth-child(4) { background: var(--load-gold); animation-delay: -615ms; }
+
+[data-loader="battery"] .loader-mark { width: 79px; height: 40px; border: 2px solid var(--load-ink); border-radius: 10px; }
+[data-loader="battery"] .loader-mark::after { content: ""; position: absolute; width: 6px; height: 14px; left: calc(100% + 1px); border-radius: 0 4px 4px 0; background: var(--load-ink); }
+[data-loader="battery"] .loader-mark > i:first-child { display: block; inset: 5px; transform-origin: left; border-radius: 4px; background: linear-gradient(90deg,var(--load-blue),var(--load-gold)); animation: loader-charge 780ms cubic-bezier(.17,.58,.27,1) infinite; }
+
+[data-loader="bounce"] .loader-mark > i:first-child { display: block; width: 36px; height: 36px; border-radius: 50%; bottom: 10px; background: var(--load-gold); box-shadow: inset -7px -6px 1px #0c1d3525; transform-origin: center bottom; animation: loader-ball 760ms infinite; }
+[data-loader="bounce"] .loader-mark > i:nth-child(2) { display: block; bottom: 7px; width: 38px; height: 6px; border-radius: 50%; background: #0c1d354d; animation: loader-shadow 760ms infinite; }
+
+@keyframes loader-open { from { opacity: 0; } to { opacity: 1; } }
+@keyframes loader-exit { to { clip-path: circle(0 at 50% 50%); opacity: .15; } from { clip-path: circle(100% at 50% 50%); } }
+@keyframes loader-sheet { to { clip-path: inset(49% 0 round 40px); opacity: 0; } from { clip-path: inset(0 round 0); } }
+@keyframes loader-expand { to { scale: 3; opacity: 0; } }
+@keyframes loader-intro { 0%, 100% { opacity: 0; } 15%, 75% { opacity: 1; } }
+@keyframes loader-orbit { to { rotate: 360deg; } }
+@keyframes loader-fill { from { transform: translate(-9%,83%) rotate(-8deg); } to { transform: translate(6%,7%) rotate(5deg); } }
+@keyframes loader-square { 0%, 100% { transform: scale(.72) rotate(0); border-radius: 7px; } 40% { transform: scale(1) rotate(45deg); border-radius: 16px; } 73% { transform: scale(.87) rotate(90deg); border-radius: 50%; } }
+@keyframes loader-chase { 0%,100% { transform: translate(-19px,-19px); } 25% { transform: translate(19px,-19px) rotate(12deg); } 50% { transform: translate(19px,19px); border-radius: 10px; } 75% { transform: translate(-19px,19px) rotate(-12deg); } }
+@keyframes loader-charge { 0% { transform: scaleX(.08); } 82%,100% { transform: scaleX(1); } }
+@keyframes loader-ball { 0%,100% { transform: translateY(-42px); animation-timing-function: cubic-bezier(.58,.06,.82,.48); } 50% { transform: translateY(0) scale(1.17,.78); animation-timing-function: cubic-bezier(.16,.54,.38,.96); } }
+@keyframes loader-shadow { 0%,100% { transform: scaleX(.53); opacity: .28; } 50% { transform: scaleX(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .route-transition, .route-intro { display: none; } }

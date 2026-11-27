@@ -143,18 +143,24 @@ function PaintedSurface({ kind, width, height, depth }: { kind: Parameters<typeo
   return map && <Surface map={map} width={width} height={height} depth={depth} />;
 }
 
-function ProductSurface({ index }: { index: number }) {
+const productTexturePaths = productScreens.slice(0, 10).map(({ image }) => image);
+const coreTexturePaths = productTexturePaths.slice(0, 4);
+const appHomeTexturePath = [productTexturePaths[4]];
+
+function ProductSurface({ index, story }: { index: number; story: boolean }) {
   const material = useRef<MeshBasicMaterial>(null);
   const outgoing = useRef<Mesh>(null);
   const outgoingMaterial = useRef<MeshBasicMaterial>(null);
   const previous = useRef(index);
-  const maps = useTexture(productScreens.map(({ image }) => image), (textures) => {
+  const screen = productScreens[index];
+  const home = index === 4;
+  const maps = useTexture(home ? appHomeTexturePath : story ? productTexturePaths : coreTexturePaths, (textures) => {
     textures.forEach((texture) => {
       texture.colorSpace = SRGBColorSpace;
       texture.anisotropy = 4;
     });
   });
-  useFrame((_, delta) => {
+  useFrame(({ gl }, delta) => {
     if (!material.current || !outgoing.current || !outgoingMaterial.current) return;
     if (previous.current !== index) {
       const old = productScreens[previous.current];
@@ -168,9 +174,13 @@ function ProductSurface({ index }: { index: number }) {
       material.current.opacity = 0;
     }
     material.current.opacity = MathUtils.damp(material.current.opacity, 1, 15, delta);
-    if (material.current.opacity > .995) outgoing.current.visible = false;
+    if (material.current.opacity > .995) {
+      outgoing.current.visible = false;
+      if (material.current.map === maps[home ? 0 : index] && gl.domElement.dataset.productTexture !== screen.id) {
+        gl.domElement.dataset.productTexture = screen.id;
+      }
+    }
   });
-  const screen = productScreens[index];
   const width = Math.min(1.52, 3.23 * screen.width / screen.height);
   const height = width * screen.height / screen.width;
   return (
@@ -181,17 +191,17 @@ function ProductSurface({ index }: { index: number }) {
       </mesh>
       <mesh ref={outgoing} position={[0, 0, .083]} visible={false}>
         <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial ref={outgoingMaterial} map={maps[index]} toneMapped={false} />
+        <meshBasicMaterial ref={outgoingMaterial} map={maps[home ? 0 : index]} toneMapped={false} />
       </mesh>
       <mesh position={[0, (3.23 - height) / 2, 0.087]} scale={[width, height, 1]}>
         <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial ref={material} map={maps[index]} toneMapped={false} transparent depthWrite={false} />
+        <meshBasicMaterial ref={material} map={maps[home ? 0 : index]} toneMapped={false} transparent depthWrite={false} />
       </mesh>
     </group>
   );
 }
 
-function Phone({ product, productView, scroll, capture }: { product: boolean; productView: number; scroll: number; capture: boolean }) {
+function Phone({ product, productView, productStory, scroll, capture }: { product: boolean; productView: number; productStory: boolean; scroll: number; capture: boolean }) {
   const screen = useRef<Group>(null);
   const UI = useRef<Group>(null);
   const backing = useRef<Group>(null);
@@ -230,7 +240,7 @@ function Phone({ product, productView, scroll, capture }: { product: boolean; pr
       <group ref={screen} position={[product ? .04 : .255, 0, product ? .24 : 1.7]}>
         <Plate size={[1.78, 3.49, .12]} radius={.15} color={titanium} metal={.68} roughness={.33} />
         <Plate size={[1.70, 3.42, .113]} radius={.14} color={product ? "#2a241e" : "#132744"} position={[0, 0, .014]} />
-        {product ? <ProductSurface index={productView} /> : <PaintedSurface kind="mobile" width={1.57} height={3.14} depth={.086} />}
+        {product ? <ProductSurface index={productView} story={productStory} /> : <PaintedSurface kind="mobile" width={1.57} height={3.14} depth={.086} />}
         <Plate size={[.29, .037, .024]} radius={.015} position={[0, 1.613, .09]} color="#1d334e" metal={.25} />
       </group>
     </group>
@@ -380,8 +390,40 @@ const poses: Record<SceneId, { rotation: [number, number, number]; position: [nu
   brand: { rotation: [0.13, -0.44, -0.1], position: [-0.13, -0.04, 0] },
 };
 
-function Stage({ id, scroll, productView, capture, onReady }: {
-  id: SceneId; scroll: number; productView: number; capture: boolean; onReady: (id: SceneId) => void;
+function TransportModel({ category, progress }: { category: string; progress: number }) {
+  const model = useRef<Group>(null);
+  useFrame(({ clock }, delta) => {
+    if (!model.current) return;
+    const flight = category === "Flight";
+    const drift = Math.sin(clock.elapsedTime * (flight ? .85 : .5));
+    model.current.position.x = MathUtils.damp(model.current.position.x, -1.53 + progress * .29 + drift * .09, 3, delta);
+    model.current.position.y = MathUtils.damp(model.current.position.y, flight ? -.68 + progress * .54 + drift * .1 : -1.27, 3, delta);
+    model.current.rotation.y = MathUtils.damp(model.current.rotation.y, .28 + progress * .38, 3, delta);
+    model.current.rotation.z = MathUtils.damp(model.current.rotation.z, flight ? .14 + drift * .07 : 0, 3, delta);
+  });
+  if (category === "Overview") return null;
+  const flight = category === "Flight";
+  const car = category === "RTO";
+  return <group ref={model} position={[-1.53, flight ? -.68 : -1.27, 1]} rotation={[.05, .3, flight ? .15 : 0]}>
+    {flight ? <>
+      <mesh rotation={[0, 0, Math.PI / 2]}><capsuleGeometry args={[.105, 1.02, 4, 12]} /><meshStandardMaterial color="#f7f7f4" roughness={.36} metalness={.2} /></mesh>
+      <Plate size={[.29,.037,.86]} radius={.017} position={[-.09,-.016,0]} color="#d1dce0" metal={.31} />
+      <Plate size={[.15,.035,.33]} radius={.016} position={[-.47,.025,0]} color="#e79b4f" metal={.32} />
+      <Plate size={[.15,.21,.04]} radius={.016} position={[-.49,.1,0]} color="#f38329" metal={.25} />
+      {[-.22,.22].map((z) => <mesh key={z} position={[.05,-.074,z]} rotation={[0,0,Math.PI / 2]}><cylinderGeometry args={[.058,.066,.19,12]} /><meshStandardMaterial color="#f7eee4" metalness={.5} roughness={.44} /></mesh>)}
+      <Plate size={[.56,.035,.018]} radius={.007} position={[.04,.03,.103]} color="#243345" />
+    </> : <>
+      <Plate size={car ? [1.2,.22,.46] : [1.34,.30,.34]} color={car ? "#b84916" : "#f07c28"} metal={.46} roughness={.34} radius={car ? .1 : .055} />
+      <Plate size={car ? [.67,.20,.38] : [1.27,.085,.35]} position={car ? [-.025,.13,0] : [0,.151,0]} radius={.07} color={car ? "#273644" : "#efede9"} metal={.3} />
+      <Plate size={car ? [.09,.06,.11] : [.95,.075,.035]} position={car ? [.55,.010,.18] : [-.06,.045,.18]} color={car ? "#ffdeb1" : "#273644"} radius={.012} />
+      {[-.37,.37].flatMap((x) => [-.17,.17].map((z) => <mesh key={`${x}-${z}`} position={[x,-.129,z]} rotation={[Math.PI / 2,0,0]}><cylinderGeometry args={[car ? .114 : .075,car ? .114 : .075,.05,10]} /><meshStandardMaterial color="#222731" roughness={.73} /></mesh>))}
+      {!car && [-.22,.22].map((z) => <Plate key={z} size={[1.63,.023,.045]} color="#999a98" metal={.62} position={[0,-.216,z]} radius={.01} />)}
+    </>}
+  </group>;
+}
+
+function Stage({ id, scroll, productView, productStory, capture, onReady }: {
+  id: SceneId; scroll: number; productView: number; productStory: boolean; capture: boolean; onReady: (id: SceneId) => void;
 }) {
   const model = useRef<Group>(null);
   const frame = useRef(0);
@@ -407,16 +449,19 @@ function Stage({ id, scroll, productView, capture, onReady }: {
     if (frame.current === 3) onReady(id);
     if (capture) return;
     const time = clock.elapsedTime;
+    const category = id === "product" ? productScreens[productView].category : "";
+    const productTilt = productStory && category === "Flight" ? -.18 : productStory && category === "RTO" ? .16 : 0;
     model.current.rotation.x = MathUtils.damp(model.current.rotation.x, pose.rotation[0] + pointer.current.y * 0.12, 3, delta);
     const entrance = 1 - Math.min(1, frame.current / 25);
-    model.current.rotation.y = MathUtils.damp(model.current.rotation.y, pose.rotation[1] + pointer.current.x * .17 - scroll * .35 + entrance * .085, 3, delta);
+    model.current.rotation.y = MathUtils.damp(model.current.rotation.y, pose.rotation[1] + pointer.current.x * .17 - scroll * .35 + entrance * .085 + productTilt, 3, delta);
     model.current.position.y = MathUtils.damp(model.current.position.y, pose.position[1] + Math.sin(time * 0.75) * 0.115 - scroll * 0.11, 3, delta);
     camera.position.x = MathUtils.damp(camera.position.x, (pointer.current.x * 0.1), 2, delta);
   });
   const scale = Math.min(1, size.width / Math.max(size.height, 1)) * (size.width < 470 ? .97 : 1);
   return (
     <group ref={model} position={pose.position} rotation={pose.rotation} scale={scale}>
-      {(id === "mobile" || id === "product") && <Phone product={id === "product"} productView={productView} scroll={scroll} capture={capture} />}
+      {(id === "mobile" || id === "product") && <Phone product={id === "product"} productView={productView} productStory={productStory} scroll={scroll} capture={capture} />}
+      {id === "product" && productStory && <TransportModel category={productScreens[productView].category} progress={scroll} />}
       {id === "web" && <BrowserPanels scroll={scroll} capture={capture} />}
       {id === "marketing" && <Audience scroll={scroll} capture={capture} />}
       {id === "technology" && <Modules scroll={scroll} capture={capture} />}
@@ -442,8 +487,8 @@ function SoftwareFrames({ active }: { active: boolean }) {
   return null;
 }
 
-export default function SceneCanvas({ id, paused, scroll, productView, capture, software, onReady, onFailure }: {
-  id: SceneId; paused: boolean; scroll: number; productView: number; capture: boolean; software: boolean;
+export default function SceneCanvas({ id, paused, scroll, productView, productStory, capture, software, onReady, onFailure }: {
+  id: SceneId; paused: boolean; scroll: number; productView: number; productStory: boolean; capture: boolean; software: boolean;
   onReady: (id: SceneId) => void; onFailure: () => void;
 }) {
   const settings = scenes.find((scene) => scene.id === id)!;
@@ -474,7 +519,7 @@ export default function SceneCanvas({ id, paused, scroll, productView, capture, 
             <Lightformer intensity={1.4} position={[3, -1, 3]} rotation={[0, -Math.PI / 3, 0]} scale={[1.4, 6, 1]} color="#f7faff" />
             <Lightformer intensity={1.45} position={[1, 3, -4]} rotation={[0, Math.PI, 0]} scale={[5, 2, 1]} color={settings.light} />
           </Environment>
-          <Stage key={id} id={id} scroll={scroll} productView={productView} capture={capture} onReady={onReady} />
+          <Stage key={id} id={id} scroll={scroll} productView={productView} productStory={productStory} capture={capture} onReady={onReady} />
         </Suspense>
       </Canvas>
     </CanvasBoundary>

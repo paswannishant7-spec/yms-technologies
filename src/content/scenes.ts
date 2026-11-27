@@ -47,22 +47,4 @@ export type SceneId = (typeof scenes)[number]["id"];
 export const scenePoster = (id: SceneId) => `/media/scene-${id}.webp`;
 export const sceneThumbnail = (id: SceneId) => `/media/scene-${id}-thumb.webp`;
 
-export const productScreens = [
-  { image: "/media/one-search-ui/railway.webp", label: "Train search", width: 360, height: 668,
-    alt: "Railway interface with origin, destination and journey date fields" },
-  { image: "/media/one-search-ui/flight.webp", label: "Flight search", width: 360, height: 668,
-    alt: "Flight interface with origin, destination and journey date fields" },
-  { image: "/media/one-search-rto.webp", label: "Vehicle services", width: 600, height: 826,
-    alt: "One Search RTO overview with a vehicle search field and links to vehicle services" },
-  { image: "/media/one-search-ui/vehicle-search.webp", label: "Vehicle lookup", width: 360, height: 876,
-    alt: "Vehicle Search design with a vehicle number field and an empty recent-searches state" },
-] as const;
-
-export const productViews = [
-  { id: "railway", label: "Railway", title: "Plan a railway journey.", screens: [0],
-    description: "Enter an origin, destination and journey date to explore trains along your route." },
-  { id: "flight", label: "Flight", title: "Look up flights by route.", screens: [1],
-    description: "Choose where you’re leaving from, where you’re going and when you plan to travel." },
-  { id: "rto", label: "RTO", title: "Find vehicle information.", screens: [2, 3],
-    description: "Start with vehicle services, then open the dedicated lookup to search by vehicle number." },
-] as const;
+export { productScreens, productViews } from "./one-search";

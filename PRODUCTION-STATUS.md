@@ -2,14 +2,14 @@
 
 ## Current state
 
-The website is implemented in this workspace as a Next.js App Router application. The current production build is serving a local preview at [127.0.0.1:3010](http://127.0.0.1:3010). Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
+The Next.js App Router production preview is available at [127.0.0.1:3012](http://127.0.0.1:3012). The [One Search product page](http://127.0.0.1:3012/products/one-search) and [draft privacy experience](http://127.0.0.1:3012/products/one-search/privacy-policy) are part of that local preview. Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
 
-The original implementation is recoverable at Git commit `a7b4f6e`. The daylight redesign immediately before the final refinement is recoverable at `9ed98e3`. The final pass retains the routing, publication controls, enquiries and SEO integration.
+The checkpoint immediately before the consolidated production pass is `efc0a13`. The original site and the first daylight redesign are recoverable at `a7b4f6e` and `9ed98e3`.
 
 ### Visual system
 
 - Midnight navy `#0C1D35` and supporting slate `#46566B` carry the text. Warm white `#FAFAF7`, pure white `#FFFFFF` and ice blue `#EAF3FC` provide the main surfaces. Royal blue `#0866E9` carries primary actions. Golden yellow `#FFC107` uses navy text, while the handwritten foreground uses deep gold `#946600` on light surfaces.
-- Plus Jakarta Sans sets the headings, DM Sans carries body and navigation text, Caveat highlights selected phrases, and IBM Plex Mono marks gallery controls and technical captions. The font files are local. Next preloads the three Latin variable families, and the Fontsource packages include their SIL Open Font Licenses.
+- Plus Jakarta Sans sets the headings, DM Sans carries body and navigation text, Caveat highlights selected phrases, and IBM Plex Mono marks gallery controls and technical captions. The font files are local. Next preloads the heading and body faces. Caveat loads when a handwritten accent uses it. The Fontsource packages include their SIL Open Font Licenses.
 - The homepage opens with an oversized brand statement, a daylight smartphone scene and a separate preview rail. The sections below use an editorial introduction, an asymmetrical expertise layout, interactive One Search views, a scroll-traced process line and a lighter enquiry band.
 - The three service pages use different scene layouts, studio backgrounds and interaction controls. Editorial, product, support and contact routes use their own compositions within the shared light design. The footer uses midnight navy.
 
@@ -41,17 +41,37 @@ Routes marked `draft` in `src/content/pages.ts` display a publication note in de
 - The approved JPEG logo and original MP4 are in `references/`. The supplied daylight reference is saved as `references/visual-direction-v2.png`. Its blue-and-yellow palette, clear hierarchy and hand-drawn emphasis informed the redesign. The site uses original copy, device artwork and page compositions. The earlier standalone homepage composition image remains missing.
 - The 720 × 540, 18.85-second video was sampled at 12 positions. The left title, low right preview rail and bottom transport repeat across scenes. Around 14.26 seconds the selected card expands from its position while nearby cards remain in place. At 3.27 seconds the next title is partially revealed through a text mask. The video’s outdoor imagery informed motion and layout only. [Reference contact sheet](artifacts/reference-video-frames.jpg)
 - The original logo stays in `references/`. `yms-identity.webp` is a full optimised conversion. The provisional `yms-navigation-light.webp` uses a navy wordmark with the original red accents for legibility on white. The earlier transparent derivative is used in the navy footer. The favicon is a chevron derivative.
-- The supplied export folder includes Railway, Flight, Vehicle Search and a transport illustration. Selected PNG originals are kept in `product-assets/one-search-ui/`. `scripts/prepare-one-search-ui.mjs` produces the public WebP files. The Railway and Flight crops remove the blank ad area while keeping the navigation, input fields and supporting actions intact. Vehicle Search uses the full standalone export. The existing genuine app RTO overview opens the two-screen vehicle sequence because the supplied design overview highlights Flight.
-- The supplied design PDF is a wide Figma board. It was reviewed as design context. The web showcase uses the standalone selected exports and the existing RTO overview. Railway and Flight each show one entry view. The vehicle story offers the overview and dedicated lookup. The dates and inputs in the artwork are design samples.
+- The supplied folder contains 34 PNGs, 67 SVGs and a large PDF board. The 15-screen gallery includes original PNGs, the existing app-reference RTO overview, and six additional screens cropped from the board. The Railway and Flight entry crops remove their blank ad area. `scripts/prepare-one-search-ui.mjs` produces local WebPs. [Screen inventory and source decisions](product-assets/one-search-ui/INVENTORY.md)
+- Browser diagnosis found HTTP 200 responses and successful decoding. The old CSS removed the visible screenshot when WebGL activated, and the replacement was a small, angled texture. The product and homepage walkthroughs now keep a separate readable screenshot beside the model. The gallery supplies full-proportion inspection, and the tests verify each natural size and the live phone's applied texture.
+- One Search has orange product branding, an app-home device hero, dedicated Railway, Flight and RTO chapters, a connected screen lineup, the interactive gallery, practical use cases, FAQs and privacy/support links. The sample result screens display design data. The website demonstration has no live search connection or unverified store links.
 - The stage architecture is an original SVG in `public/media/architecture.svg`. Live 3D meshes, lighting, mock service interface textures and still renders are generated locally. The service interface and marketing visualisation represent the disciplines. One Search uses the supplied application assets.
 
 ## 3D and motion
 
 - The active scene runs in a lazy-loaded React Three Fiber canvas. Scene geometry includes a layered smartphone, responsive browser panels, a search and audience sculpture, engineering modules, the One Search phone and a brand chevron sculpture.
-- The six scenes retain brushed titanium, matte inserts and neutral studio reflections. One Search now maps each screen using its recorded aspect ratio and blends the previous texture into the new one on the live device. The product walkthrough pairs the sticky desktop device with scroll-linked Railway, Flight and RTO chapters. Tabs and the RTO step controls remain directly usable at every width.
-- Each scene has a full poster and a smaller image for the preview rail. The canvas waits for the poster, fonts and an initial paint opportunity. Rendering pauses off-screen. Software rendering starts at 0.64 pixel ratio with a 20 fps ceiling and a smaller environment map. Reduced motion and WebGL failure receive a static view.
+- The six scenes retain brushed titanium, matte inserts and neutral studio reflections. The One Search walkthrough maps screens at their recorded aspect ratios and blends them as controls or scroll chapters change. Its procedural miniature train, aircraft and car each move differently, and the phone adjusts its pose to match the chapter. The gallery uses a native dialog, touch and keyboard controls, plus focus restoration.
+- Each scene has a full poster and a smaller image for the preview rail. Canvas startup follows poster and font readiness and an initial paint opportunity. Off-screen canvases pause immediately and release resources after 1.2 seconds. The corporate product scene uses four textures, and the One Search hero loads its single texture. Software rendering starts at 0.64 pixel ratio with a 20 fps ceiling and a smaller environment map. Reduced motion and WebGL failure retain the static view.
 - GSAP runs the 1.04-second shared-element morph by revealing a fixed viewport stage with a rounded clip. The preview artwork moves with a uniform transform. FLIP repositions the rail, and the matching poster holds the destination until the new model is ready. Manual selection, autoplay, keyboard navigation, swipes and focus remain available.
-- GSAP coordinates word masks, handwritten reveals, underlines and restrained paragraph entrances. ScrollTrigger drives the process line and limited parallax. Service demos retain scroll-driven controls, with route headings revealing as navigation completes. The header stays in view as users scroll.
+- GSAP coordinates word masks, handwritten reveals, underlines and staggered headings, product artwork, copy and actions. Below-fold ScrollTrigger registration follows the critical first-paint opportunity. Service demos retain scroll-driven controls, and the header stays visible as users scroll.
+
+### Route loaders
+
+| Animation | Default destination group |
+| --- | --- |
+| Orbit | Home and Technology |
+| Liquid Fill | App Development and Products |
+| Square Morph | Services and Web Development |
+| Chasing Squares | Digital Marketing, Insights and scoped Work previews |
+| Battery Charge | One Search, product support, Support Centre and the orange privacy transition |
+| Bouncing Ball | About, Careers, Industries and Contact |
+
+Navigation requests start immediately. Fast routes complete the signature and reveal in about 0.93 seconds. A timeout clears interrupted or stalled in-app transitions. Direct visits keep the content usable under a small, decorative introductory mark. Reduced motion skips the overlay, and same-page controls use their local transitions.
+
+### Independent privacy draft
+
+The original sibling `Landing page` project identifies itself as the One Search Privacy Center. Its source marks the legal copy **Draft 0.1** and includes unverified references to creative-media, AI and face processing. Legal identity, effective date, app data practices, vendors and contact or deletion operations still require confirmation. The integrated static export preserves the original language, layout, styling, navigation, motion and reader. A return link connects to One Search. The source contains no background video files, so the original pauseable animated fallback remains active. The integration introduces no public policy claim.
+
+Only loopback can serve the draft when `YMS_LOCAL_PRIVACY_PREVIEW=true` and `SITE_URL` is unset. The route responds with `noindex, nofollow` and stays outside the sitemap. The compiled independent assets reside in `privacy-export/`, outside the public asset folder. The original source and media were hash-checked unchanged. To refresh the generated export, run `powershell -File scripts/import-one-search-privacy.ps1` with the source dependencies already installed. The import builds a staged copy and rewrites the base path and return link only.
 
 ## Development and deployment
 
@@ -67,14 +87,16 @@ The production preview can run alongside the development server on a separate po
 ```powershell
 npm run typecheck
 npm run lint
+$env:YMS_LOCAL_PRIVACY_PREVIEW='true'
 npm run build
-npm start -- --hostname 127.0.0.1 --port 3010
+npm start -- --hostname 127.0.0.1 --port 3012
 # In a separate terminal
-$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3010'
+$env:YMS_LOCAL_PRIVACY_PREVIEW='true'
+$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3012'
 npm test
 ```
 
-Set approved deployment variables before building and configure the same values at runtime. Use the official HTTPS origin at the hosting edge and redirect other hostnames to that origin. Verify real enquiry receipt in a protected release environment. Review the published routes, sitemap, robots.txt, legal information and support links before release. For Chrome recording, run `npx playwright install ffmpeg`, set `PREVIEW_URL` to the production preview origin, and run `npm run qa:artifacts`.
+For a release build, unset `YMS_LOCAL_PRIVACY_PREVIEW` before building, then set the approved deployment variables at build and runtime. Use the approved HTTPS origin at the hosting edge and verify enquiry receipt in a protected release environment. Review the published routes, sitemap, robots.txt, legal information and support links before release. For the local Chrome evidence, run `npx playwright install ffmpeg`, set `PREVIEW_URL` to the preview origin, and run `node scripts/capture-final.mjs`.
 
 ### Environment
 
@@ -103,32 +125,32 @@ The receiver accepts JSON with `requestId`, `kind`, `name`, `email`, `area`, `me
 
 ## Verification
 
-The November 27, 2026 final refinement passed the production build, TypeScript, ESLint and all 14 Playwright checks against the local production build. The responsive suite covered 1920, 1440, 1024, 768, 390 and 360 px. Chrome verified the rounded source-card and destination clips, rapid navigation, autoplay and pause, touch gestures, menu focus, local fonts, resolved contrast, handwritten stroke drawing, the scroll-driven process line, reduced motion and WebGL fallback. A separate 1024 px check reached live WebGL on all six homepage scenes with no console or page errors. Product checks covered the genuine Railway texture on the live phone, Flight and Vehicle Search screen selection, keyboard navigation, scroll-linked chapters, and the genuine static fallback. Published pages returned 200, internal links resolved to published routes, and the 17 draft content routes returned 404.
+The production build, TypeScript, ESLint and all **17 Playwright checks passed**. The responsive checks covered 1920, 1440, 1024, 768, 390 and 360 px. Existing checks verified source-card expansion, live canvas rendering, autoplay, mobile touch and navigation, text and handwriting, reduced motion, metadata, and WebGL fallback. A separate Chrome run rendered all six homepage scenes in live WebGL without console or page errors. The final suite also verified the six destination loaders, same-page anchors, all 15 product asset responses and natural sizes, visible desktop and mobile screenshots, Railway, Flight and Vehicle Search texture changes, keyboard gallery controls, and the standalone privacy draft with JavaScript disabled. Its separate policy reader route and pauseable motion controls also passed.
 
-The preview still blocks indexing, and its sitemap is empty without an approved origin. A previous production-handler check with a synthetic HTTPS origin produced exactly 15 sitemap URLs and excluded the drafts. The final Playwright suite verified rejected malformed, cross-origin, bot and disabled deletion submissions, and the unavailable-delivery state. The isolated HTTPS delivery check passed forwarding, idempotency headers, downstream error handling and rate limiting. Live receiving accounts and external Redis remain dependent on release configuration.
+The preview still blocks indexing, and its sitemap is empty without an approved origin. A previous production-handler check with a synthetic HTTPS origin produced exactly 15 sitemap URLs and excluded the drafts. A separate default-production process returned 404 for the privacy document, subsidiary route and logo asset. The local draft preview keeps its `noindex` response. All 25 hashed privacy source and media files matched their pre-integration hashes. The isolated HTTPS delivery check passed authenticated forwarding, idempotency headers, downstream error handling and rate limiting. Live receiving accounts and external Redis remain dependent on release configuration.
 
 ### Performance and evidence
 
-These are loopback production measurements in headless Chrome with forced software WebGL and no configured network or CPU throttling. The final pass had two capture runs with no browser errors. Desktop LCP exceeded the 2.5-second target in both runs. The desktop poster transferred in under 300 ms in two separate diagnostic traces, while its first paint was recorded at 3.44–3.94 s. Hardware frame cadence and field LCP, CLS and INP still need measurement. [Previous capture](artifacts/v2/performance.json) · [Latest capture](artifacts/v3/performance.json)
+Two independent visits per viewport used loopback production, Chrome 158, forced SwiftShader WebGL and no configured CPU or network throttling. The desktop poster finished transferring in 108–214 ms, while the first contentful paint occurred at 2.53–3.99 s. The delay is after delivery. Deferred scroll-motion registration, the later WebGL handoff and fewer preloaded fonts reduce the work competing with first paint. Desktop LCP improved in these samples and remained above the 2.5-second target. Mobile LCP increased and stayed below 2.5 seconds. All four captured visits reported no console or page errors. [Previous capture](artifacts/v3/performance.json) · [Final readings](artifacts/final/performance.json)
 
-| Metric | Daylight redesign | Final pass, two runs |
+| Metric | Previous refinement | Consolidated pass |
 | --- | ---: | ---: |
-| 1440 px desktop LCP | 3.12 s | 4.08–8.35 s |
-| 390 px mobile LCP | 0.74 s | 0.94–1.42 s |
-| Desktop pre-input layout shift sum | 0.012 | 0.004 |
+| 1440 px desktop LCP | 4.08–8.35 s | 2.53–3.99 s |
+| 390 px mobile LCP | 0.94–1.42 s | 1.72–2.32 s |
+| Desktop pre-input layout shift sum | 0.004 | 0.004 |
 | Mobile pre-input layout shift sum | 0 | 0 |
-| Desktop sampled software frame cadence | 5.66 fps | 6.21–6.67 fps |
-| Mobile sampled software frame cadence | 15.51 fps | 6.79–16.52 fps |
-| Six full-size posters | 153 KiB | 149 KiB |
 
-The six dedicated rail thumbnails total 46 KiB. The active scene uses the full poster while its live model starts. Inactive cards use the smaller assets.
+The six dedicated rail thumbnails total 46 KiB. The active scene uses the full poster while its live model starts. Inactive cards use the smaller assets. The short frame sample immediately after WebGL readiness was 0.47–0.81 fps on desktop and 7.64–15.56 fps on mobile. The previous capture gave WebGL 450 ms to settle before sampling, so its cadence readings have a different sampling window. Hardware frame cadence and field LCP, CLS and INP remain unverified.
 
-- Homepage [desktop](artifacts/v3/home-desktop.png) and [mobile](artifacts/v3/home-mobile.png)
-- App Development [desktop](artifacts/v3/app-development-desktop.png) and [mobile](artifacts/v3/app-development-mobile.png)
-- Web Development [desktop](artifacts/v3/web-development-desktop.png) and [mobile](artifacts/v3/web-development-mobile.png)
-- Digital Marketing [desktop](artifacts/v3/digital-marketing-desktop.png) and [mobile](artifacts/v3/digital-marketing-mobile.png)
-- One Search [desktop walkthrough](artifacts/v3/one-search-desktop.png), [mobile full page](artifacts/v3/one-search-mobile.png) and [vehicle lookup](artifacts/v3/one-search-vehicle-lookup.png)
-- [Homepage transition recording](artifacts/v3/homepage-transition.webm) and [One Search demo](artifacts/v3/one-search-demo.webm)
+- Homepage [desktop](artifacts/final/homepage-desktop.png) and [mobile](artifacts/final/homepage-mobile.png)
+- App Development [desktop](artifacts/final/app-development-desktop.png) and [mobile](artifacts/final/app-development-mobile.png)
+- Web Development [desktop](artifacts/final/web-development-desktop.png) and [mobile](artifacts/final/web-development-mobile.png)
+- Digital Marketing [desktop](artifacts/final/digital-marketing-desktop.png) and [mobile](artifacts/final/digital-marketing-mobile.png)
+- One Search hero [desktop](artifacts/final/one-search-desktop.png) and [mobile](artifacts/final/one-search-mobile.png)
+- One Search walkthrough [desktop](artifacts/final/one-search-walkthrough-desktop.png) and [mobile](artifacts/final/one-search-walkthrough-mobile.png)
+- One Search gallery [desktop](artifacts/final/one-search-gallery-desktop.png) and [mobile](artifacts/final/one-search-gallery-mobile.png)
+- Independent privacy draft [desktop](artifacts/final/one-search-privacy-desktop.png) and [mobile](artifacts/final/one-search-privacy-mobile.png)
+- Recordings of [all six loaders](artifacts/final/route-loaders.webm), [page transitions](artifacts/final/page-transitions.webm), [the One Search demo](artifacts/final/one-search-experience.webm) and [privacy navigation](artifacts/final/privacy-navigation.webm)
 
 ### Known limitations
 

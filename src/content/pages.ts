@@ -1,4 +1,5 @@
 import type { SceneId } from "./scenes";
+import { productQuestions } from "./one-search";
 
 export type FAQ = readonly [question: string, answer: string];
 type EditorialSection = { heading: string; body: string };
@@ -147,13 +148,10 @@ export const pages: Record<string, Page> = {
   "/services/performance-marketing": { title: "Performance Marketing", description: "Performance marketing service preview.", layout: "service", scene: "marketing", parent: "/services", draft: pendingService },
   "/services/social-media-marketing": { title: "Social Media Marketing", description: "Social media marketing service preview.", layout: "service", scene: "marketing", parent: "/services", draft: pendingService },
   "/products/one-search": {
-    title: "One Search", description: "One Search by YMS Technologies brings railway, flight and RTO information together in one application.",
-    layout: "product", scene: "product", eyebrow: "A YMS Technologies product", headline: "One Search. More possibilities.",
+    title: "One Search", description: "Explore One Search by YMS Technologies, with railway, flight and vehicle search walkthroughs and genuine interface previews.",
+    layout: "product", scene: "product", eyebrow: "A YMS Technologies product", headline: "One app. More possibilities.",
     parent: "/products",
-    faqs: [
-      ["What does One Search bring together?", "The application provides one place to look up railway, flight and RTO information."],
-      ["How can I get help with One Search?", "Use One Search Support and include the section of the app and a description of what happened."],
-    ],
+    faqs: productQuestions,
   },
   "/products/one-search/privacy-policy": { title: "One Search Privacy Policy", description: "Privacy information for the One Search application.", parent: "/products/one-search", layout: "legal", draft: pendingPolicy + " Confirm app permissions, advertising SDKs and account functionality." },
   "/products/one-search/terms": { title: "One Search Terms", description: "Terms for use of the One Search application.", parent: "/products/one-search", layout: "legal", draft: "Confirm the legal operator, supported features, third-party information sources, service limitations and governing terms." },

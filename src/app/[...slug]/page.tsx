@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Closing, FAQList, ProductFeature, SectionHeading, ServiceLinks } from "@/components/sections";
 import { EnquiryForm } from "@/components/enquiry-form";
-import { Experience, Process, ProductExplorer } from "@/components/experience";
+import { Experience, Process } from "@/components/experience";
+import { OneSearchPage } from "@/components/one-search-page";
+import { PrivacyLink } from "@/components/privacy-link";
 import { Icon } from "@/components/icon";
 import { Handwritten } from "@/components/handwritten";
 import { StructuredData } from "@/components/structured-data";
@@ -52,9 +54,10 @@ export default async function InteriorPage({ params }: Props) {
   if (!routeVisible(path)) notFound();
   const page = pages[path];
   const layout = page.layout ?? "legal";
+  if (layout === "product") return <><StructuredData path={path} /><OneSearchPage breadcrumb={<Breadcrumbs path={path} />} /></>;
   const service = layout === "service";
   const operational = Boolean(deliverySettings());
-  const stage = page.scene && !["product", "contact"].includes(layout);
+  const stage = page.scene && layout !== "contact";
 
   return (
     <article className={`interior interior-${layout} interior-${page.scene ?? "text"}`}>
@@ -67,16 +70,11 @@ export default async function InteriorPage({ params }: Props) {
           <h1 data-route-reveal>{page.headline ?? page.title}
             {layout === "contact" && <> <Handwritten>Let&apos;s make it happen.</Handwritten></>}
           </h1>
-          <p className="interior-description">{page.description}</p>
-          {service && !page.draft && <Link className="button" href="/contact">Discuss your project <Icon name="up-right" size={16} /></Link>}
-          {layout === "product" && <div className="product-intro-actions">
-            <Link className="button button-solid" href="#one-search-tour">Explore the app <Icon name="down" size={16} /></Link>
-            <Link className="inline-link" href="/products/one-search/support">One Search Support <Icon name="up-right" size={16} /></Link>
-          </div>}
+          <p className="interior-description" data-route-copy>{page.description}</p>
+          {service && !page.draft && <Link className="button" href="/contact" data-route-copy>Discuss your project <Icon name="up-right" size={16} /></Link>}
         </div>
         {stage && page.scene && <Experience id={page.scene} className="interior-art"
           steps={service && page.scene in viewSteps ? viewSteps[page.scene as keyof typeof viewSteps] : undefined} />}
-        {layout === "product" && <Image className="product-hero-logo" src="/media/one-search-ui/transport-art.webp" alt="One Search logo with a train, aircraft and car" width={296} height={185} unoptimized />}
       </header>
       {layout === "contact" && (
         <section className="section wrap contact-grid">
@@ -92,16 +90,13 @@ export default async function InteriorPage({ params }: Props) {
       )}
       {layout === "services" && <section className="section wrap"><SectionHeading label="Explore our services">Choose where to begin.</SectionHeading><ServiceLinks /></section>}
       {layout === "products" && <section className="section wrap"><SectionHeading label="Our digital products">Explore One Search.</SectionHeading><ProductFeature /></section>}
-      {layout === "product" && <section id="one-search-tour" className="section wrap product-detail">
-        <SectionHeading label="One Search walkthrough">Three ways to find information.</SectionHeading>
-        <ProductExplorer walkthrough />
-      </section>}
       {layout === "support" && (
         <section className="section wrap support-content">
           {page.productSupport ? (
             <>
               <SectionHeading label="Report an issue">How can we help?</SectionHeading>
               <Link className="inline-link" href="/products/one-search#one-search-tour">Review the One Search walkthrough <Icon name="up-right" size={16} /></Link>
+              <PrivacyLink className="inline-link product-privacy-link" />
               <EnquiryForm initialKind="support" available={operational} email={business.support} />
               {isPublished("/products/one-search/delete-account") && <Link className="inline-link" href="/products/one-search/delete-account">Account and data deletion <Icon name="up-right" size={16} /></Link>}
             </>

@@ -26,10 +26,11 @@ export function useVisible<T extends HTMLElement>(margin = "0px") {
   return { ref, visible };
 }
 
-export default function SceneView({ id, paused = false, productView = 0, capture = false, scrollOverride }: {
+export default function SceneView({ id, paused = false, productView = 0, productStory = false, capture = false, scrollOverride }: {
   id: SceneId;
   paused?: boolean;
   productView?: number;
+  productStory?: boolean;
   capture?: boolean;
   scrollOverride?: number;
 }) {
@@ -40,6 +41,12 @@ export default function SceneView({ id, paused = false, productView = 0, capture
   const [fallback, setFallback] = useState(false);
   const motionReduced = useReducedMotion();
   const [scroll, setScroll] = useState(0);
+
+  useEffect(() => {
+    if (visible || !activated || capture) return;
+    const timer = window.setTimeout(() => { setActivated(false); setReady(null); }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [activated, capture, visible]);
 
   useEffect(() => {
     if (!visible || motionReduced || fallback || !ref.current) return;
@@ -70,9 +77,9 @@ export default function SceneView({ id, paused = false, productView = 0, capture
           paint = window.requestAnimationFrame(() => {
             // Give the first poster a paint opportunity before probing the GPU and evaluating the 3D bundle.
             timer = window.setTimeout(() => {
-              if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(activate, { timeout: 900 });
+              if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(activate, { timeout: 850 });
               else activate();
-            }, inHero ? 620 : 40);
+            }, inHero ? 850 : 60);
           });
         });
       }
@@ -108,7 +115,7 @@ export default function SceneView({ id, paused = false, productView = 0, capture
     <div ref={ref} className="scene-live" aria-hidden="true" data-renderer={capture && live ? "capture-ready" : live ? "webgl" : "poster"}>
       {activated && !motionReduced && !fallback && (
         <div className={live ? "scene-canvas is-ready" : "scene-canvas"}>
-          <SceneCanvas id={id} paused={paused || !visible} scroll={scrollOverride ?? scroll} productView={productView}
+          <SceneCanvas id={id} paused={paused || !visible} scroll={scrollOverride ?? scroll} productView={productView} productStory={productStory}
             capture={capture} software={software && !capture} onReady={setReady} onFailure={() => setFallback(true)} />
         </div>
       )}

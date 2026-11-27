@@ -1,0 +1,62 @@
+{
+  "browser": "158.0.8127.88",
+  "conditions": "Loopback production, Chrome headless, SwiftShader WebGL, no network or CPU throttling. Two independent visits per viewport. Frame cadence sampled for 850 ms after live rendering. No field vitals or INP.",
+  "visits": [
+    {
+      "run": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "lcpMs": 3992,
+      "lcpElement": "hero-poster",
+      "layoutShift": 0.0036512345679012344,
+      "fcpMs": 3992,
+      "posterResponseEndMs": 213.89999997615814,
+      "softwareFrameSampleFps": 0.4744733345985955,
+      "browserErrors": []
+    },
+    {
+      "run": 2,
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "lcpMs": 2528,
+      "lcpElement": "hero-poster",
+      "layoutShift": 0.0036512345679012344,
+      "fcpMs": 2528,
+      "posterResponseEndMs": 108,
+      "softwareFrameSampleFps": 0.8056070248932575,
+      "browserErrors": []
+    },
+    {
+      "run": 1,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "lcpMs": 2320,
+      "lcpElement": "architecture",
+      "layoutShift": 0,
+      "fcpMs": 1740,
+      "posterResponseEndMs": 764.3000000119209,
+      "softwareFrameSampleFps": 7.638585770405932,
+      "browserErrors": []
+    },
+    {
+      "run": 2,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "lcpMs": 1716,
+      "lcpElement": "architecture",
+      "layoutShift": 0,
+      "fcpMs": 1088,
+      "posterResponseEndMs": 117.39999997615814,
+      "softwareFrameSampleFps": 15.559013114025335,
+      "browserErrors": []
+    }
+  ]
+}

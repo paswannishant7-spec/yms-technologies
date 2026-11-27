@@ -9,6 +9,17 @@ const assets = [
   ["flight", "Android Compact - 34.png", 668],
   ["vehicle-search", "Vehicle Search.png"],
   ["transport-art", "Group 2147223793.png"],
+  ["home", "Home Revised.png"],
+  ["home-services", "Android Compact - 26.png"],
+  ["vehicle-services", "Section - Promotional Banner.png"],
+  ["traffic-rules-card", "Group 18.png"],
+  ["rail-tools", "Frame 65.png"],
+  ["welcome", "app-welcome.png"],
+  ["rail-results", "rail-results.png"],
+  ["rail-timetable", "rail-timetable.png"],
+  ["rail-stations", "rail-stations.png"],
+  ["flight-results", "flight-results.png"],
+  ["flight-details", "flight-details.png"],
 ];
 
 for (const [id, filename, height] of assets) {

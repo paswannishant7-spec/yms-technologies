@@ -338,6 +338,12 @@ section[id], .product-viewer { scroll-margin-top: calc(var(--nav-height) + 12px)
 .product-view-description { margin-top: .65rem; color: #5f4b38; }
 .product-static-phone { position: absolute; top: 10%; left: 50%; translate: -50%; height: 80%; aspect-ratio: .48; padding: 5px; overflow: hidden; background: #fff; border: 2px solid #7b716b; border-radius: 17px; box-shadow: 0 10px 22px #6b3a302b; }
 .product-static-phone img { width: 100%; height: 100%; object-fit: contain; object-position: top; }
+.product-feature .product-device-layout { display: grid; gap: .55rem; grid-template-columns: minmax(0,1.8fr) minmax(100px,1fr); }
+.product-screen-reference { margin: 0; display: grid; align-content: start; justify-items: center; padding: .42rem; gap: .34rem; min-width: 0; border: 1px solid var(--product-line, #ecd5c2); background: #fffdfb; border-radius: .85rem; }
+.product-screen-reference img { display: block; width: 100%; height: auto; max-height: 390px; object-fit: contain; object-position: top; }
+.product-screen-reference figcaption { font-size: .69rem; line-height: 1.25; text-align: center; color: #785540; }
+.privacy-draft-label { font: 500 .66rem/1.2 var(--font-dm), sans-serif; opacity: .88; white-space: nowrap; }
+.product-privacy-link { display: inline-flex; gap: .45rem; }
 .contact-grid { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: clamp(1.5rem,5vw,5rem); }
 .contact-sidebar > p { color: var(--muted); margin-top: .9rem; }
 .contact-art { min-height: 250px; margin-top: 1.25rem; }

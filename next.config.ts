@@ -6,6 +6,7 @@ const config: NextConfig = {
   devIndicators: false,
   agentRules: false,
   outputFileTracingRoot: path.resolve(process.cwd()),
+  outputFileTracingIncludes: { "/products/one-search/privacy-policy/**/*": ["./privacy-export/**/*"] },
   images: { formats: ["image/webp"] },
   async headers() {
     return [{

@@ -4,6 +4,7 @@ import { isPublished, primaryServices, type FAQ } from "@/content/pages";
 import { scenePoster } from "@/content/scenes";
 import { Icon } from "./icon";
 import { ProductExplorer } from "./experience";
+import { PrivacyLink } from "./privacy-link";
 import { Handwritten } from "./handwritten";
 
 export function SectionHeading({ label, children }: { label: string; children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export function ProductFeature({ interactive = false }: { interactive?: boolean 
         <h3>One Search</h3>
         <p>Railway, flight and RTO information in one digital experience.</p>
         <Link href="/products/one-search" className="button">Discover One Search <Icon name="up-right" size={16} /></Link>
+        <PrivacyLink className="inline-link product-privacy-link" />
       </div>
       {interactive ? <ProductExplorer /> :
         <div className="product-feature-art" aria-hidden="true"><Image src="/media/one-search-ui/transport-art.webp" alt="" width={296} height={185} unoptimized /></div>}

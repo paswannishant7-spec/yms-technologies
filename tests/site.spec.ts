@@ -231,11 +231,12 @@ test("product tabs and the route transition work with keyboard navigation", asyn
   await page.goto("/products");
   await page.getByRole("link", { name: "Discover One Search" }).click();
   await expect(page).toHaveURL(/\/products\/one-search$/);
-  await expect(page.getByRole("heading", { name: /One Search\. More possibilities/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /One app\.\s*More possibilities/ })).toBeVisible();
   const stage = page.locator(".product-experience");
   await stage.scrollIntoViewIfNeeded();
   await expect(stage.locator('[data-renderer="webgl"]')).toHaveCount(1, { timeout: 20_000 });
   await expect(stage.locator(".scene-canvas")).toHaveCSS("opacity", "1");
+  await expect(stage.locator("canvas")).toHaveAttribute("data-product-texture", "railway");
   await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/railway.webp");
   const liveFrame = await stage.locator("canvas").screenshot();
   const pixels = await sharp(liveFrame).resize(210).removeAlpha().raw().toBuffer();
@@ -249,11 +250,14 @@ test("product tabs and the route transition work with keyboard navigation", asyn
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "Flight" })).toHaveAttribute("aria-selected", "true");
   await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/flight.webp");
+  await expect(stage.locator("canvas")).toHaveAttribute("data-product-texture", "flight");
+  expect(await stage.locator("canvas").screenshot()).not.toEqual(liveFrame);
   await page.keyboard.press("End");
   await expect(page.getByRole("tab", { name: "RTO" })).toBeFocused();
   await expect(page.getByRole("tabpanel")).toContainText("vehicle number");
   await page.getByRole("button", { name: "Vehicle lookup", exact: true }).click();
   await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/vehicle-search.webp");
+  await expect(stage.locator("canvas")).toHaveAttribute("data-product-texture", "vehicle-search");
   await expect(page.getByRole("button", { name: "Vehicle lookup", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -285,7 +289,7 @@ test("published pages have unique metadata and internal links resolve", async ({
     expect(description).toBeTruthy();
     descriptions.add(description);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", title);
-    for (const path of await page.locator('a[href^="/"]').evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).pathname))) internal.add(path);
+    for (const path of await page.locator('a[href^="/"]:not([data-privacy-link])').evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).pathname))) internal.add(path);
   }
   expect(titles.size).toBe(publishedPaths.length);
   expect(descriptions.size).toBe(publishedPaths.length);
@@ -294,6 +298,7 @@ test("published pages have unique metadata and internal links resolve", async ({
 
 test("production hides drafts and leaves an unconfigured preview out of the sitemap", async ({ request }) => {
   for (const path of [...pagePaths.filter((route) => !publishedPaths.includes(route)), "/not-a-page", "/scene-preview/mobile"]) {
+    if (path === "/products/one-search/privacy-policy" && process.env.YMS_LOCAL_PRIVACY_PREVIEW === "true") continue;
     const response = await request.get(path);
     expect(response.status(), path).toBe(404);
     expect(await response.text()).toContain("Page unavailable.");

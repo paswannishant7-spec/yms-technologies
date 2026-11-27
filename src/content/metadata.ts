@@ -9,13 +9,15 @@ export function metadataFor(path: string): Metadata {
   const page = pages[path];
   const title = path === "/" ? `${brandTitle} | ${page.title}` : `${page.title} | ${brandTitle}`;
   const canonical = business.origin && isPublished(path) ? new URL(path, business.origin).href : undefined;
-  const image = business.origin ? new URL(socialImage, business.origin).href : undefined;
+  const image = business.origin ? new URL(page.layout === "product" ? "/media/scene-product.webp" : socialImage, business.origin).href : undefined;
   return {
     title, description: page.description,
     alternates: canonical ? { canonical } : undefined,
     robots: !canonical ? { index: false, follow: false } : undefined,
     openGraph: { type: "website", locale: "en_IN", siteName: brandTitle, title, description: page.description,
-      url: canonical, images: image ? [{ url: image, width: 1200, height: 630, alt: "YMS Technologies – Technology in Motion" }] : undefined },
+      url: canonical, images: image ? [page.layout === "product"
+        ? { url: image, width: 760, height: 760, alt: "One Search phone with its Railway interface" }
+        : { url: image, width: 1200, height: 630, alt: "YMS Technologies – Technology in Motion" }] : undefined },
     twitter: { card: "summary_large_image", title, description: page.description, images: image ? [image] : undefined },
   };
 }
@@ -41,7 +43,7 @@ export function structuredData(path: string) {
   });
   if (page.layout === "product") result.push({
     ...schema, "@type": "SoftwareApplication", name: page.title, description: page.description, url: absolute(path),
-    image: absolute("/media/one-search-logo.webp"), publisher: { "@id": organisationId },
+    image: absolute("/media/one-search-logo.webp"), screenshot: absolute("/media/one-search-ui/home.webp"), publisher: { "@id": organisationId },
   });
   if (faq?.length) result.push({
     ...schema, "@type": "FAQPage", mainEntity: faq.map(([question, answer]) => ({

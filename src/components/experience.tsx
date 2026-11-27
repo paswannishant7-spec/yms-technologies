@@ -6,8 +6,8 @@ import { processSteps } from "@/content/pages";
 import { productScreens, productViews, scenePoster, scenes, type SceneId } from "@/content/scenes";
 import SceneView from "./scene-view";
 
-export function Experience({ id, className = "", productView = 0, steps, caption }: {
-  id: SceneId; className?: string; productView?: number; steps?: readonly string[]; caption?: string;
+export function Experience({ id, className = "", productView = 0, steps, caption, productStory = false }: {
+  id: SceneId; className?: string; productView?: number; steps?: readonly string[]; caption?: string; productStory?: boolean;
 }) {
   const scene = scenes.find((entry) => entry.id === id)!;
   const [step, setStep] = useState<number | null>(null);
@@ -23,7 +23,7 @@ export function Experience({ id, className = "", productView = 0, steps, caption
         ) : (
           <Image src={scenePoster(id)} alt="" fill sizes="(max-width: 760px) 92vw, 55vw" unoptimized />
         )}
-        <SceneView id={id} productView={productView} scrollOverride={step !== null && steps ? step / (steps.length - 1) : undefined} />
+        <SceneView id={id} productView={productView} productStory={productStory} scrollOverride={step !== null && steps ? step / (steps.length - 1) : undefined} />
       </div>
       <figcaption>
         {caption ?? scene.subtitle}
@@ -92,11 +92,15 @@ export function ProductExplorer({ walkthrough = false }: { walkthrough?: boolean
             ref={(node) => { buttons.current[i] = node; }} onClick={() => select(i)} onKeyDown={keys}>{label}</button>)}
         </div>
         <div id={`${id}-screen`} role="tabpanel" aria-labelledby={`${id}-${view.id}`} tabIndex={0}>
-          <Experience id="product" productView={screenId} className="product-experience" caption={`${screen.label} · One Search preview`} />
-          <p className="sr-only">{screen.alt}</p>
-          <div className="product-steps" aria-label={view.screens.length > 1 ? "RTO screens" : undefined}
-            role={view.screens.length > 1 ? "group" : undefined}>
-            {view.screens.length > 1 && view.screens.map((frame, at) => (
+          <div className="product-device-layout">
+            <Experience id="product" productView={screenId} productStory={walkthrough} className="product-experience" caption={`${screen.label} · One Search preview`} />
+            <figure className="product-screen-reference" data-readable-screen={screen.id}>
+              <Image key={screen.id} src={screen.image} width={screen.width} height={screen.height} alt={screen.alt} unoptimized />
+              <figcaption>Interface preview</figcaption>
+            </figure>
+          </div>
+          <div className="product-steps" aria-label={`${view.label} screens`} role="group">
+            {view.screens.map((frame, at) => (
               <button type="button" key={frame} onClick={() => select(index, at)} aria-pressed={step === at}>{productScreens[frame].label}</button>
             ))}
           </div>
@@ -104,10 +108,11 @@ export function ProductExplorer({ walkthrough = false }: { walkthrough?: boolean
         </div>
       </div>
       {walkthrough && <div className="product-chapters" ref={stories}>
-        {productViews.map((chapter, at) => <article key={chapter.id} data-product-chapter={at} data-current={at === index}>
+        {productViews.map((chapter, at) => <article key={chapter.id} id={`one-search-${chapter.id}`} data-product-chapter={at} data-current={at === index}>
           <p className="eyebrow">{chapter.label}</p>
           <h3>{chapter.title}</h3>
           <p>{chapter.description}</p>
+          {chapter.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           <button type="button" className="inline-link" onClick={() => {
             select(at);
             if (!window.matchMedia("(min-width: 900px) and (min-height: 740px)").matches) viewer.current?.scrollIntoView({ block: "start" });
