@@ -1,5 +1,5 @@
-:HL["/yms-technologies/_next/static/css/65791596d0222013.css","style"]
+:HL["/yms-technologies/_next/static/css/0dd971bcdf4e9a0c.css","style"]
 :HL["/yms-technologies/_next/static/css/28d032d79d795d26.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"slug","t":"c","k":"products/one-search/support","s":["_not-found","_global-error"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"klwAbLvzCMvY3RZpEiEEW","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
+0:{"b":"AbjFUh5Y5ODio_XyVmAgq","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
