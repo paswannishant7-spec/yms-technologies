@@ -6,10 +6,14 @@ import { processSteps } from "@/content/pages";
 import { productViews, scenePoster, scenes, type SceneId } from "@/content/scenes";
 import SceneView from "./scene-view";
 
-export function Experience({ id, className = "", productView = 0 }: { id: SceneId; className?: string; productView?: number }) {
+export function Experience({ id, className = "", productView = 0, steps }: {
+  id: SceneId; className?: string; productView?: number; steps?: readonly string[];
+}) {
   const scene = scenes.find((entry) => entry.id === id)!;
+  const [step, setStep] = useState<number | null>(null);
   return (
-    <figure className={`experience stage-backdrop ${className}`} style={{ "--scene-base": scene.background, "--scene-accent": scene.accent } as React.CSSProperties}>
+    <figure className={`experience stage-backdrop ${className}`} data-model={id}
+      style={{ "--scene-base": scene.background, "--scene-accent": scene.accent } as React.CSSProperties}>
       <div className="architecture" aria-hidden="true" />
       <div className="stage-floor" aria-hidden="true" />
       <div className="experience-art" aria-hidden="true">
@@ -18,9 +22,15 @@ export function Experience({ id, className = "", productView = 0 }: { id: SceneI
         ) : (
           <Image src={scenePoster(id)} alt="" fill sizes="(max-width: 760px) 92vw, 55vw" unoptimized />
         )}
-        <SceneView id={id} productView={productView} />
+        <SceneView id={id} productView={productView} scrollOverride={step !== null && steps ? step / (steps.length - 1) : undefined} />
       </div>
-      <figcaption>{scene.subtitle}</figcaption>
+      <figcaption>
+        {scene.subtitle}
+        {steps && <div className="experience-controls" role="group" aria-label="Explore the 3D view">
+          {steps.map((label, i) => <button type="button" key={label} aria-pressed={step === i}
+            onClick={() => setStep(step === i ? null : i)}>{label}</button>)}
+        </div>}
+      </figcaption>
     </figure>
   );
 }
@@ -56,6 +66,7 @@ export function Process() {
   const [active, setActive] = useState(0);
   return (
     <div className="process">
+      <span className="process-line" aria-hidden="true" data-process-line="" />
       <ol className="process-steps">
         {processSteps.map(([label], index) => <li key={label}><button type="button" aria-pressed={active === index} onClick={() => setActive(index)}>
           <span>{String(index + 1).padStart(2, "0")}</span>{label}

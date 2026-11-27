@@ -24,16 +24,17 @@ try {
     await sharp(render).webp({ quality: 90, alphaQuality: 96 }).toFile(`public/media/scene-${id}.webp`);
     console.log(`Captured ${id}`);
   }
-  const arch = await sharp("public/media/architecture.svg").resize(1200, 630, { fit: "cover" }).toBuffer();
-  const mark = await sharp("public/media/yms-navigation-derivative.webp").resize(250).png().toBuffer();
+  const arch = await sharp("public/media/architecture.svg").resize(1200, 630, { fit: "cover" }).png().toBuffer();
+  const mark = await sharp("public/media/yms-navigation-light.webp").resize(205).png().toBuffer();
   const phone = await sharp("public/media/scene-mobile.webp").resize(650).extract({ left: 0, top: 10, width: 650, height: 630 }).png().toBuffer();
   const typeset = Buffer.from(`<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-    <path d="M70 194h62" stroke="#EA173C" stroke-width="5"/>
-    <text x="70" y="290" fill="#F4F6FA" font-size="78" font-weight="800" font-family="Arial,sans-serif">TECHNOLOGY</text>
-    <text x="70" y="384" fill="#F4F6FA" font-size="78" font-weight="800" font-family="Arial,sans-serif">IN MOTION.</text>
-    <text x="72" y="457" fill="#B1C8EC" font-size="27" font-family="Arial,sans-serif">YMS Technologies</text>
+    <path d="M70 196h62" stroke="#FFC107" stroke-width="5"/>
+    <text x="70" y="293" fill="#0C1D35" font-size="73" font-weight="800" font-family="Arial,sans-serif">Technology</text>
+    <text x="70" y="380" fill="#0866E9" font-size="73" font-weight="800" font-family="Arial,sans-serif">in Motion.</text>
+    <text x="72" y="453" fill="#46566B" font-size="27" font-family="Arial,sans-serif">YMS Technologies</text>
   </svg>`);
-  await sharp(arch).composite([{ input: phone, left: 550, top: 0 }, { input: mark, left: 59, top: 34 }, { input: typeset }])
+  await sharp({ create: { width: 1200, height: 630, channels: 3, background: "#eaf3fc" } })
+    .composite([{ input: arch }, { input: phone, left: 550, top: 0 }, { input: mark, left: 59, top: 34 }, { input: typeset }])
     .webp({ quality: 90 }).toFile("public/media/social.webp");
 } finally {
   await browser.close();

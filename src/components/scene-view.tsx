@@ -26,11 +26,12 @@ export function useVisible<T extends HTMLElement>(margin = "0px") {
   return { ref, visible };
 }
 
-export default function SceneView({ id, paused = false, productView = 0, capture = false }: {
+export default function SceneView({ id, paused = false, productView = 0, capture = false, scrollOverride }: {
   id: SceneId;
   paused?: boolean;
   productView?: number;
   capture?: boolean;
+  scrollOverride?: number;
 }) {
   const { ref, visible } = useVisible<HTMLDivElement>();
   const [activated, setActivated] = useState(false);
@@ -42,23 +43,43 @@ export default function SceneView({ id, paused = false, productView = 0, capture
   useEffect(() => {
     if (!visible || motionReduced || !ref.current) return;
     if (!activated) {
-      const timer = window.setTimeout(() => {
+      let cancelled = false;
+      let idle = 0;
+      let timer = 0;
+      const activate = () => {
+        if (cancelled) return;
         const probe = document.createElement("canvas");
         const context = probe.getContext("webgl2");
         if (context) {
           context.getExtension("WEBGL_lose_context")?.loseContext();
           setActivated(true);
         } else setFallback(true);
-      }, capture ? 0 : 170);
-      return () => window.clearTimeout(timer);
+      };
+      if (capture) timer = window.setTimeout(activate, 0);
+      else {
+        const poster = ref.current.parentElement?.querySelector("img");
+        const critical = Promise.allSettled([document.fonts.ready, poster?.decode()]);
+        void critical.then(() => {
+          if (cancelled) return;
+          if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(activate, { timeout: 1050 });
+          else timer = window.setTimeout(activate, 180);
+        });
+      }
+      return () => {
+        cancelled = true;
+        window.clearTimeout(timer);
+        if (idle) window.cancelIdleCallback(idle);
+      };
     }
     if (capture) return;
     let frame = 0;
     const update = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const top = ref.current?.getBoundingClientRect().top ?? 0;
-        setScroll(Math.min(1, Math.max(0, -top / (window.innerHeight * 0.65))));
+        const hero = ref.current?.closest(".cinematic-hero");
+        const top = (hero ?? ref.current)?.getBoundingClientRect().top ?? 0;
+        const view = window.innerHeight;
+        setScroll(Math.min(1, Math.max(0, ((hero ? 0 : view * .38) - top) / (view * .82))));
       });
     };
     window.addEventListener("scroll", update, { passive: true });
@@ -74,7 +95,7 @@ export default function SceneView({ id, paused = false, productView = 0, capture
     <div ref={ref} className="scene-live" aria-hidden="true" data-renderer={capture && live ? "capture-ready" : live ? "webgl" : "poster"}>
       {activated && !motionReduced && !fallback && (
         <div className={live ? "scene-canvas is-ready" : "scene-canvas"}>
-          <SceneCanvas id={id} paused={paused || !visible} scroll={scroll} productView={productView}
+          <SceneCanvas id={id} paused={paused || !visible} scroll={scrollOverride ?? scroll} productView={productView}
             capture={capture} onReady={setReady} onFailure={() => setFallback(true)} />
         </div>
       )}

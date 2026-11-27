@@ -1,0 +1,30 @@
+{
+  "conditions": "Local production server, headless Chrome, software WebGL, no network or CPU throttling. Layout shifts are summed before input. No field Web Vitals or INP measurement.",
+  "browser": "158.0.8127.88",
+  "visits": [
+    {
+      "name": "home-desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "lcpMs": 3124,
+      "layoutShiftSum": 0.012,
+      "domContentLoadedMs": 88.2,
+      "softwareFrameSampleFps": 5.66,
+      "browserErrors": []
+    },
+    {
+      "name": "home-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "lcpMs": 744,
+      "layoutShiftSum": 0,
+      "domContentLoadedMs": 220.4,
+      "softwareFrameSampleFps": 15.506,
+      "browserErrors": []
+    }
+  ]
+}

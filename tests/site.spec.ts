@@ -41,6 +41,7 @@ test("the selected preview expands from its measured card and activates live 3D"
   await expect(flight).toHaveAttribute("data-observed-card-start", "true");
   await expect(scene).toHaveAttribute("data-scene", "web");
   await expect(scene.getByRole("link", { name: "Explore Web Development" })).toHaveAttribute("href", "/services/web-development");
+  await expect(scene.getByRole("heading", { name: "Websites that work beautifully." })).toBeVisible();
   await expect(flight).toBeHidden();
   await expect(flight).toHaveCSS("width", "1280px");
   await expect(flight).toHaveCSS("border-radius", "0px");
@@ -55,6 +56,9 @@ test("keyboard controls loop all six scenes and reduced motion uses the poster",
   const scene = page.locator(".cinematic-hero");
   await expect(scene.getByRole("button", { name: "Pause autoplay" })).toHaveCount(0);
   await expect(scene.locator("canvas")).toHaveCount(0);
+  await expect(scene.getByRole("heading", { name: "We Build. We Innovate. You Grow." })).toBeVisible();
+  await expect(scene.getByRole("link", { name: "Explore Our Services" })).toHaveAttribute("href", "/services");
+  await expect(scene.getByRole("link", { name: "Our Products" })).toHaveAttribute("href", "/products");
   await expect(scene.locator(".hero-poster")).toHaveJSProperty("naturalWidth", 760);
   await scene.focus();
   await page.keyboard.press("ArrowLeft");
@@ -64,6 +68,94 @@ test("keyboard controls loop all six scenes and reduced motion uses the poster",
     await expect(scene).toHaveAttribute("data-scene", id);
   }
   await expect(scene.locator(".scene-flight")).toBeHidden();
+});
+
+test("the light design loads local fonts and leaves room for the mobile handwritten headline", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const report = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const root = getComputedStyle(document.documentElement);
+    const heading = document.querySelector<HTMLElement>(".hero-title")!;
+    const ink = heading.querySelector<HTMLElement>("[data-ink]")!;
+    const actions = document.querySelector<HTMLElement>(".hero-actions")!;
+    const preview = document.querySelector<HTMLElement>(".hero-preview")!;
+    const stage = document.querySelector<HTMLElement>(".hero-environment")!;
+    const cta = document.querySelector<HTMLElement>(".nav-cta")!;
+    const firstFamily = (value: string) => value.split(",")[0].trim().replace(/^["']|["']$/g, "");
+    const loaded = new Set(Array.from(document.fonts)
+      .filter((face) => face.status === "loaded").map((face) => firstFamily(face.family)));
+    const uses = (element: HTMLElement, token: string) => {
+      const family = firstFamily(root.getPropertyValue(token));
+      return firstFamily(getComputedStyle(element).fontFamily) === family && loaded.has(family);
+    };
+    const luminance = (color: string) => color.match(/\d+/g)!.slice(0, 3).map((num) => Number(num) / 255)
+      .reduce((sum, value, i) => sum + [.2126, .7152, .0722][i] * (value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4), 0);
+    const contrast = (fore: string, back: string) => (luminance(back) + .05) / (luminance(fore) + .05);
+    const ctaStyle = getComputedStyle(cta);
+    return {
+      display: uses(heading, "--font-jakarta"),
+      accent: uses(ink, "--font-caveat"),
+      captionColor: getComputedStyle(ink).color,
+      navBackground: getComputedStyle(document.querySelector(".site-header")!).backgroundColor,
+      textContrast: contrast(getComputedStyle(ink).color, getComputedStyle(stage).backgroundColor) >= 4.5 &&
+        contrast(ctaStyle.color, ctaStyle.backgroundColor) >= 4.5,
+      inkFits: ink.getBoundingClientRect().right <= innerWidth,
+      actionsFit: actions.getBoundingClientRect().bottom < preview.getBoundingClientRect().top,
+    };
+  });
+  expect(report).toEqual({ display: true, accent: true, captionColor: "rgb(148, 102, 0)", navBackground: "rgb(255, 255, 255)",
+    inkFits: true, actionsFit: true, textContrast: true });
+});
+
+test("rapid controls preserve the active scene and leave the next transition usable", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Pause autoplay" }).click();
+  const gallery = page.locator(".cinematic-hero");
+  await gallery.evaluate((element) => {
+    const next = element.querySelector<HTMLButtonElement>("[data-next]")!;
+    for (let press = 0; press < 5; press++) next.click();
+  });
+  await expect(gallery).toHaveAttribute("data-scene", "web");
+  await expect(gallery.locator(".scene-flight")).toBeHidden();
+  await expect(gallery.locator(".hero-art")).toHaveAttribute("data-current-render", "true");
+  await gallery.getByRole("button", { name: "Next scene" }).click();
+  await expect(gallery).toHaveAttribute("data-scene", "marketing");
+});
+
+test("the handwritten underline and scroll-driven process line animate", async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+      value(this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+        return type.startsWith("webgl") ? null : Reflect.apply(original, this, [type, ...args]);
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Pause autoplay" }).click();
+  const gallery = page.locator(".cinematic-hero");
+  await gallery.evaluate((element) => {
+    const observer = new MutationObserver((changes) => {
+      for (const change of changes) {
+        if (!(change.target instanceof SVGElement) || !change.target.matches("[data-underline]")) continue;
+        if (parseFloat(change.target.style.strokeDashoffset) > 0 || /stroke-dashoffset:\s*1/.test(change.oldValue ?? "")) {
+          element.setAttribute("data-verified-stroke", "true");
+          observer.disconnect();
+        }
+      }
+    });
+    observer.observe(element, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["style"] });
+  });
+  await gallery.getByRole("button", { name: "Show scene 02, Web Development" }).click();
+  await expect(gallery).toHaveAttribute("data-scene", "web");
+  await expect(gallery).toHaveAttribute("data-verified-stroke", "true");
+  const line = page.locator(".process-line");
+  const scale = () => line.evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).a);
+  await expect.poll(scale).toBeLessThan(.1);
+  await page.locator(".process-band").evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await expect.poll(scale).toBeGreaterThan(.95);
 });
 
 test("autoplay advances, pauses and resumes", async ({ page }) => {

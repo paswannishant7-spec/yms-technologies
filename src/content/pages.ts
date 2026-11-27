@@ -82,7 +82,7 @@ export const pages: Record<string, Page> = {
   },
   "/contact": {
     title: "Contact YMS Technologies", description: "Tell YMS Technologies about a mobile app, website or digital marketing project, or send a general enquiry.",
-    layout: "contact", scene: "brand", eyebrow: "Project enquiries", headline: "Let's build what's next.",
+    layout: "contact", scene: "brand", eyebrow: "Project enquiries", headline: "Have something in mind?",
   },
   "/support": {
     title: "Support Centre", description: "Find YMS Technologies support routes for One Search and general technology enquiries.",
@@ -94,7 +94,7 @@ export const pages: Record<string, Page> = {
   },
   "/services/app-development": {
     title: "Mobile App Development", description: "YMS Technologies plans, designs and develops mobile applications around real user tasks, with clear interfaces, testing and launch planning.",
-    layout: "service", scene: "mobile", eyebrow: "01 / Mobile App Development", headline: "Engineered to move.",
+    layout: "service", scene: "mobile", eyebrow: "Mobile App Development", headline: "Make every tap count.",
     parent: "/services",
     sections: [
       { heading: "From a task to an app", body: "We start with the people who will use the application, the tasks they need to complete and the constraints of the devices and networks they rely on." },
@@ -109,7 +109,7 @@ export const pages: Record<string, Page> = {
   },
   "/services/web-development": {
     title: "Web Development", description: "YMS Technologies builds responsive websites around clear content, accessible interfaces and maintainable web engineering.",
-    layout: "service", scene: "web", eyebrow: "02 / Web Development", headline: "Beyond the browser.",
+    layout: "service", scene: "web", eyebrow: "Web Development", headline: "Built for the way people browse.",
     parent: "/services",
     sections: [
       { heading: "The website as a working system", body: "We develop websites with understandable navigation, clear content and interactions that support a visitor’s next step." },
@@ -124,7 +124,7 @@ export const pages: Record<string, Page> = {
   },
   "/services/digital-marketing": {
     title: "Digital Marketing", description: "YMS Technologies plans digital marketing around audience needs, search visibility, relevant messaging and meaningful measurement.",
-    layout: "service", scene: "marketing", eyebrow: "03 / Digital Marketing", headline: "Built to be found.",
+    layout: "service", scene: "marketing", eyebrow: "Digital Marketing", headline: "Find the people who need you.",
     parent: "/services",
     sections: [
       { heading: "Find the audience and its questions", body: "Start with what people are trying to learn, where they look for it and which information helps them make a decision." },

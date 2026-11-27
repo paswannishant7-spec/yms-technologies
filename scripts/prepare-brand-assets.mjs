@@ -5,7 +5,7 @@ const output = "public/media";
 const logo = "references/yms-technologies-logo.jpeg";
 const product = "product-assets/";
 await mkdir(output, { recursive: true });
-await Promise.all([
+if (!process.argv.includes("--nav-only")) await Promise.all([
   sharp(logo).resize(850).webp({ quality: 91 }).toFile(`${output}/yms-identity.webp`),
   sharp(`${product}ONE_SEARCH_LOGO.jpeg`).resize(400).webp({ quality: 93 }).toFile(`${output}/one-search-logo.webp`),
   ...[
@@ -38,3 +38,12 @@ for (let y = 0; y < info.height; y++) {
 }
 await sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } })
   .resize(330).webp({ lossless: true }).toFile(`${output}/yms-navigation-derivative.webp`);
+
+const daylight = Buffer.from(rgba);
+for (let i = 0; i < daylight.length; i += 4) {
+  const [red, green, blue] = [daylight[i], daylight[i + 1], daylight[i + 2]];
+  if (red > green * 1.35 && red > blue * 1.23) continue;
+  [daylight[i], daylight[i + 1], daylight[i + 2]] = [12, 29, 53];
+}
+await sharp(daylight, { raw: { width: info.width, height: info.height, channels: 4 } })
+  .resize(300).webp({ lossless: true }).toFile(`${output}/yms-navigation-light.webp`);

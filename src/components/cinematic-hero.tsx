@@ -4,10 +4,11 @@ import gsap from "gsap";
 import { Flip } from "gsap/Flip";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { flushSync } from "react-dom";
 import { productViews, scenePoster, scenes } from "@/content/scenes";
 import { Icon } from "./icon";
+import { Handwritten } from "./handwritten";
 import SceneView, { useReducedMotion, useVisible } from "./scene-view";
 
 gsap.registerPlugin(Flip);
@@ -20,6 +21,27 @@ const theme = (scene: (typeof scenes)[number]) => ({
   "--scene-accent": scene.accent,
   "--scene-base": scene.background,
 } as CSSProperties);
+
+function revealTitle(scope: HTMLElement, entrance = false) {
+  const timeline = gsap.timeline();
+  const words = scope.querySelectorAll("[data-hero-word]");
+  const copy = scope.querySelectorAll("[data-hero-copy]");
+  const ink = scope.querySelectorAll("[data-ink]");
+  const stroke = scope.querySelectorAll("[data-underline]");
+  timeline.fromTo(words, { yPercent: 106 }, {
+    yPercent: 0, stagger: .065, duration: .69, ease: "power3.out", clearProps: "transform",
+  }, entrance ? .17 : 0);
+  if (ink.length) timeline.fromTo(ink, { clipPath: "inset(0 100% 0 0)" }, {
+    clipPath: "inset(0 0% 0 0)", duration: .61, ease: "power2.out", clearProps: "clipPath",
+  }, entrance ? .52 : .27);
+  if (stroke.length) timeline.fromTo(stroke, { strokeDashoffset: 1 }, {
+    strokeDashoffset: 0, duration: .49, ease: "power2.out", clearProps: "strokeDashoffset",
+  }, entrance ? .84 : .55);
+  timeline.fromTo(copy, { y: 10, opacity: 0 }, {
+    y: 0, opacity: 1, duration: .42, stagger: .08, clearProps: "transform,opacity",
+  }, entrance ? .79 : .38);
+  return timeline;
+}
 
 export function CinematicHero() {
   const [index, setIndex] = useState(0);
@@ -40,12 +62,14 @@ export function CinematicHero() {
   const bar = useRef<HTMLSpanElement>(null);
   const progress = useRef<gsap.core.Tween | null>(null);
   const animation = useRef<gsap.core.Timeline | null>(null);
-  const titleAnimation = useRef<gsap.core.Tween | null>(null);
+  const entranceAnimation = useRef<gsap.core.Timeline | null>(null);
+  const titleAnimation = useRef<gsap.core.Timeline | null>(null);
   const railAnimation = useRef<gsap.core.Timeline | null>(null);
   const gesture = useRef<{ x: number; y: number; id: number } | null>(null);
   const ignoreTapUntil = useRef(0);
   const cards = useRef(new Map<number, HTMLButtonElement>());
   const current = useRef(0);
+  const introPlayed = useRef(false);
   const scene = scenes[index];
   const upcoming = [1, 2, 3].map((offset) => (index + offset) % scenes.length);
 
@@ -58,6 +82,8 @@ export function CinematicHero() {
     const overlayArt = flightArt.current;
     const stage = art.current;
     if (!container || !overlay || !overlayArt || !stage) return;
+    entranceAnimation.current?.revert();
+    entranceAnimation.current = null;
     if (reduced) {
       current.current = target;
       setIndex(target);
@@ -82,6 +108,7 @@ export function CinematicHero() {
     setBusy(true);
     overlay.style.setProperty("--scene-base", next.background);
     overlay.style.setProperty("--scene-accent", next.accent);
+    overlay.dataset.model = next.id;
     overlayArt.style.backgroundImage = `url("${scenePoster(next.id)}")`;
 
     gsap.set(overlay, {
@@ -119,12 +146,10 @@ export function CinematicHero() {
         const nextCard = cards.current.get((target + 1) % scenes.length);
         (nextCard ?? container.querySelector<HTMLButtonElement>("[data-next]"))?.focus({ preventScroll: true });
       }
-      const incoming = headline.current?.querySelectorAll("[data-hero-animate]");
-      if (incoming?.length) titleAnimation.current = gsap.fromTo(incoming, { yPercent: 112 }, {
-        yPercent: 0, stagger: 0.055, duration: 0.51, ease: "power3.out", clearProps: "transform",
-      });
+      if (headline.current) titleAnimation.current = revealTitle(headline.current);
     }, [], 0.93);
     timeline.to(overlay, { opacity: 0, duration: 0.24, ease: "power1.inOut" }, duration);
+    timeline.to(stage, { scale: .96, opacity: .78, duration: .7, ease: "power2.inOut", clearProps: "transform,opacity" }, .05);
     timeline.set(overlay, { visibility: "hidden" }, duration + 0.24);
     // Leave the current GPU scene in place until card, text and rail choreography have completed.
     timeline.call(() => {
@@ -134,6 +159,25 @@ export function CinematicHero() {
       setBusy(false);
     }, [], 1.68);
   }, [reduced, root]);
+
+  useEffect(() => {
+    if (reduced || window.matchMedia("(prefers-reduced-motion: reduce)").matches || introPlayed.current || !headline.current) return;
+    if (performance.now() > 1300 || current.current !== 0) return;
+    introPlayed.current = true;
+    const entrance = revealTitle(headline.current, true);
+    entranceAnimation.current = entrance;
+    if (art.current) entrance.fromTo(art.current, { x: 22, y: 16, scale: .96 }, {
+      x: 0, y: 0, scale: 1, duration: .9, ease: "power3.out", clearProps: "transform",
+    }, .25);
+    if (rail.current) entrance.fromTo(rail.current.children, { y: 14, opacity: .65 }, {
+      y: 0, opacity: 1, duration: .44, stagger: .065, clearProps: "transform,opacity",
+    }, .78);
+    return () => {
+      entrance.revert();
+      if (entranceAnimation.current === entrance) entranceAnimation.current = null;
+      introPlayed.current = false;
+    };
+  }, [reduced]);
 
   useEffect(() => () => {
     animation.current?.kill();
@@ -207,10 +251,12 @@ export function CinematicHero() {
   }
 
   return (
-    <section className="cinematic-hero" aria-roledescription="scene gallery" aria-label="The Digital Shift" tabIndex={0}
+    <section className="cinematic-hero" aria-roledescription="scene gallery" aria-label="Technology in Motion" tabIndex={0}
       ref={root} style={theme(scene)} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerUp={onPointerUp}
+      onFocus={(event) => { if (event.target.matches("a, .preview-card")) setFocus(true); }}
+      onBlur={(event) => { if (!event.relatedTarget?.matches("a, .preview-card") || !event.currentTarget.contains(event.relatedTarget)) setFocus(false); }}
       onPointerCancel={() => { gesture.current = null; }} data-scene={scene.id}>
-      <div className="hero-environment stage-backdrop" aria-hidden="true">
+      <div className="hero-environment stage-backdrop" data-model={scene.id} aria-hidden="true">
         <div className="architecture" />
         <div className="stage-floor" />
       </div>
@@ -230,22 +276,30 @@ export function CinematicHero() {
         <div className="hero-shade" />
       </div>
       <div className="hero-shell">
-        <div className="hero-topline"><span className="status-light" /> The Digital Shift</div>
-        <div className="hero-coordinate" aria-hidden="true"><span>YMS / TECHNOLOGIES</span><span>{scene.system}</span></div>
         <div className="hero-copy" key={scene.id} ref={headline}>
-          <div className="text-mask"><p className="hero-eyebrow" data-hero-animate=""><span>{format(index)}</span><i />{scene.label}</p></div>
-          <h1 className={`hero-title ${scene.id === "product" ? "hero-title-compact" : ""}`} data-route-reveal>
-            {scene.title.map((line) => <span className="text-mask" key={line}><span data-hero-animate="">{line}{" "}</span></span>)}
+          <div className="text-mask"><p className="hero-eyebrow" data-hero-animate=""><span />{index === 0 ? "Technology in Motion" : scene.label}</p></div>
+          <h1 className={`hero-title hero-title-${scene.id}`} aria-label={scene.title.join(" ")} data-route-reveal>
+            {scene.title.map((line, row) => (
+              <span className={`text-mask hero-line hero-line-${row}`} key={line}>
+                <span data-hero-animate="">
+                  {scene.id === "mobile" && row === 2 ? <Handwritten>{line}</Handwritten>
+                    : scene.id === "web" && row === 1 ? <><span data-hero-word="">work</span>{" "}<Handwritten>beautifully.</Handwritten></>
+                      : line.split(" ").map((word, i) => <Fragment key={`${word}-${i}`}>{i ? " " : null}<span data-hero-word="">{word}</span></Fragment>)}
+                </span>
+              </span>
+            ))}
           </h1>
-          <div className="text-mask"><p className="hero-description" data-hero-animate="">{scene.description}</p></div>
+          <div className="text-mask"><p className="hero-description" data-hero-copy="" data-hero-animate="">{scene.description}</p></div>
           <div className="text-mask hero-cta-mask">
-            <div data-hero-animate=""><Link className="button hero-cta" href={scene.href}>{scene.cta}<Icon name="up-right" size={16} /></Link></div>
+            <div className="hero-actions" data-hero-copy="" data-hero-animate="">
+              <Link className="button button-solid hero-cta" href={scene.href}>{scene.cta}<Icon name="up-right" size={16} /></Link>
+              {index === 0 && <Link className="button button-secondary" href="/products">Our Products</Link>}
+            </div>
           </div>
         </div>
         <div className="hero-preview">
-          <div className="preview-label"><span>Up next</span><span aria-hidden="true">/</span></div>
-          <div className="preview-rail" ref={rail} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-            onFocus={() => setFocus(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false); }}>
+          <div className="preview-label">Explore the scenes</div>
+          <div className="preview-rail" ref={rail} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
             {upcoming.map((item) => {
               const preview = scenes[item];
               return (

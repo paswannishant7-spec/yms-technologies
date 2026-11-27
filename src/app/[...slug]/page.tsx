@@ -5,6 +5,7 @@ import { Closing, FAQList, ProductFeature, SectionHeading, ServiceLinks } from "
 import { EnquiryForm } from "@/components/enquiry-form";
 import { Experience, Process, ProductExplorer } from "@/components/experience";
 import { Icon } from "@/components/icon";
+import { Handwritten } from "@/components/handwritten";
 import { StructuredData } from "@/components/structured-data";
 import { business } from "@/content/business";
 import { metadataFor } from "@/content/metadata";
@@ -12,6 +13,11 @@ import { isPublished, pages, publishedPaths, routeVisible } from "@/content/page
 import { deliverySettings, enabledKind } from "@/server/enquiries";
 
 type Props = { params: Promise<{ slug: string[] }> };
+const viewSteps = {
+  mobile: ["Discovery", "Interface", "Development", "Testing", "Launch"],
+  web: ["Desktop", "Tablet", "Mobile"],
+  marketing: ["Search", "Audience", "Content"],
+} as const;
 
 export function generateStaticParams() {
   return publishedPaths.filter((path) => path !== "/").map((path) => ({ slug: path.slice(1).split("/") }));
@@ -58,12 +64,15 @@ export default async function InteriorPage({ params }: Props) {
       <header className={`interior-hero wrap ${stage ? "with-stage" : ""}`}>
         <div className="interior-title">
           <p className="eyebrow"><span />{page.eyebrow ?? (page.draft ? "Development preview" : page.title)}</p>
-          <h1 data-route-reveal>{page.headline ?? page.title}</h1>
+          <h1 data-route-reveal>{page.headline ?? page.title}
+            {layout === "contact" && <> <Handwritten>Let&apos;s make it happen.</Handwritten></>}
+          </h1>
           <p className="interior-description">{page.description}</p>
           {service && !page.draft && <Link className="button" href="/contact">Discuss your project <Icon name="up-right" size={16} /></Link>}
           {layout === "product" && <Link className="inline-link" href="/products/one-search/support">One Search Support <Icon name="up-right" size={16} /></Link>}
         </div>
-        {stage && page.scene && <Experience id={page.scene} className="interior-art" />}
+        {stage && page.scene && <Experience id={page.scene} className="interior-art"
+          steps={service && page.scene in viewSteps ? viewSteps[page.scene as keyof typeof viewSteps] : undefined} />}
         {layout === "product" && <Image className="product-hero-logo" src="/media/one-search-logo.webp" alt="One Search logo" width={200} height={200} unoptimized priority />}
       </header>
       {layout === "contact" && (

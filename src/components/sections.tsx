@@ -3,6 +3,8 @@ import Link from "next/link";
 import { isPublished, primaryServices, type FAQ } from "@/content/pages";
 import { scenePoster } from "@/content/scenes";
 import { Icon } from "./icon";
+import { ProductExplorer } from "./experience";
+import { Handwritten } from "./handwritten";
 
 export function SectionHeading({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="section-heading"><p className="eyebrow"><span />{label}</p><h2 data-scroll-reveal>{children}</h2></div>;
@@ -28,7 +30,7 @@ export function FAQList({ items }: { items: readonly FAQ[] }) {
   </details>)}</div>;
 }
 
-export function ProductFeature() {
+export function ProductFeature({ interactive = false }: { interactive?: boolean }) {
   return (
     <div className="product-feature">
       <div className="product-feature-content">
@@ -37,16 +39,17 @@ export function ProductFeature() {
         <p>Railway, flight and RTO information in one digital experience.</p>
         <Link href="/products/one-search" className="button">Discover One Search <Icon name="up-right" size={16} /></Link>
       </div>
-      <div className="product-feature-art" aria-hidden="true"><Image src={scenePoster("product")} alt="" width={720} height={720} unoptimized /></div>
+      {interactive ? <ProductExplorer /> :
+        <div className="product-feature-art" aria-hidden="true"><Image src={scenePoster("product")} alt="" width={720} height={720} unoptimized /></div>}
     </div>
   );
 }
 
-export function Closing({ title = "Let's build what's next.", description = "Tell us what you want to create, who it’s for and what you need it to do." }: { title?: string; description?: string }) {
+export function Closing({ title = "Let's build what's next.", accent, description = "Tell us what you want to create, who it’s for and what you need it to do." }: { title?: string; accent?: string; description?: string }) {
   return (
     <section className="closing">
       <div className="wrap closing-shell">
-        <div><p className="eyebrow"><span />Project enquiries</p><h2 data-scroll-reveal>{title}</h2><p>{description}</p></div>
+        <div><p className="eyebrow"><span />Project enquiries</p><h2 data-scroll-reveal>{title}{accent && <> <Handwritten>{accent}</Handwritten></>}</h2><p>{description}</p></div>
         <Link className="button button-solid" href="/contact">Start a project <Icon name="up-right" size={17} /></Link>
       </div>
     </section>
