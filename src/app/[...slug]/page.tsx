@@ -69,11 +69,14 @@ export default async function InteriorPage({ params }: Props) {
           </h1>
           <p className="interior-description">{page.description}</p>
           {service && !page.draft && <Link className="button" href="/contact">Discuss your project <Icon name="up-right" size={16} /></Link>}
-          {layout === "product" && <Link className="inline-link" href="/products/one-search/support">One Search Support <Icon name="up-right" size={16} /></Link>}
+          {layout === "product" && <div className="product-intro-actions">
+            <Link className="button button-solid" href="#one-search-tour">Explore the app <Icon name="down" size={16} /></Link>
+            <Link className="inline-link" href="/products/one-search/support">One Search Support <Icon name="up-right" size={16} /></Link>
+          </div>}
         </div>
         {stage && page.scene && <Experience id={page.scene} className="interior-art"
           steps={service && page.scene in viewSteps ? viewSteps[page.scene as keyof typeof viewSteps] : undefined} />}
-        {layout === "product" && <Image className="product-hero-logo" src="/media/one-search-logo.webp" alt="One Search logo" width={200} height={200} unoptimized priority />}
+        {layout === "product" && <Image className="product-hero-logo" src="/media/one-search-ui/transport-art.webp" alt="One Search logo with a train, aircraft and car" width={296} height={185} unoptimized />}
       </header>
       {layout === "contact" && (
         <section className="section wrap contact-grid">
@@ -89,12 +92,16 @@ export default async function InteriorPage({ params }: Props) {
       )}
       {layout === "services" && <section className="section wrap"><SectionHeading label="Explore our services">Choose where to begin.</SectionHeading><ServiceLinks /></section>}
       {layout === "products" && <section className="section wrap"><SectionHeading label="Our digital products">Explore One Search.</SectionHeading><ProductFeature /></section>}
-      {layout === "product" && <section className="section wrap product-detail"><SectionHeading label="One Search in use">Three ways to find information.</SectionHeading><ProductExplorer /></section>}
+      {layout === "product" && <section id="one-search-tour" className="section wrap product-detail">
+        <SectionHeading label="One Search walkthrough">Three ways to find information.</SectionHeading>
+        <ProductExplorer walkthrough />
+      </section>}
       {layout === "support" && (
         <section className="section wrap support-content">
           {page.productSupport ? (
             <>
               <SectionHeading label="Report an issue">How can we help?</SectionHeading>
+              <Link className="inline-link" href="/products/one-search#one-search-tour">Review the One Search walkthrough <Icon name="up-right" size={16} /></Link>
               <EnquiryForm initialKind="support" available={operational} email={business.support} />
               {isPublished("/products/one-search/delete-account") && <Link className="inline-link" href="/products/one-search/delete-account">Account and data deletion <Icon name="up-right" size={16} /></Link>}
             </>
@@ -111,7 +118,7 @@ export default async function InteriorPage({ params }: Props) {
           {page.sections.map(({ heading, body }, i) => (
             <article key={heading}>
               {(service || layout === "insights" || layout === "industries") && <span className="editorial-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>}
-              <h2 data-scroll-reveal>{heading}</h2><p>{body}</p>
+              <h2 data-scroll-reveal>{heading}</h2><p data-copy-reveal>{body}</p>
               {layout === "about" && i === 0 && <Image className="identity-art" src="/media/yms-identity.webp" alt="Approved YMS Technologies identity with Technology in Motion tagline" width={550} height={550} unoptimized />}
             </article>
           ))}

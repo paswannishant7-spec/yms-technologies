@@ -2,9 +2,9 @@
 
 ## Current state
 
-The website is implemented in this workspace as a Next.js App Router application. The local preview uses [127.0.0.1:3000](http://127.0.0.1:3000). Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
+The website is implemented in this workspace as a Next.js App Router application. The current production build is serving a local preview at [127.0.0.1:3010](http://127.0.0.1:3010). Public release requires verified business information, operational enquiry delivery and content approval. The project has not been deployed.
 
-The original implementation is recoverable at Git commit `a7b4f6e`. The redesign retains the existing routing, publication controls, enquiries, application assets and SEO integration.
+The original implementation is recoverable at Git commit `a7b4f6e`. The daylight redesign immediately before the final refinement is recoverable at `9ed98e3`. The final pass retains the routing, publication controls, enquiries and SEO integration.
 
 ### Visual system
 
@@ -41,16 +41,17 @@ Routes marked `draft` in `src/content/pages.ts` display a publication note in de
 - The approved JPEG logo and original MP4 are in `references/`. The supplied daylight reference is saved as `references/visual-direction-v2.png`. Its blue-and-yellow palette, clear hierarchy and hand-drawn emphasis informed the redesign. The site uses original copy, device artwork and page compositions. The earlier standalone homepage composition image remains missing.
 - The 720 × 540, 18.85-second video was sampled at 12 positions. The left title, low right preview rail and bottom transport repeat across scenes. Around 14.26 seconds the selected card expands from its position while nearby cards remain in place. At 3.27 seconds the next title is partially revealed through a text mask. The video’s outdoor imagery informed motion and layout only. [Reference contact sheet](artifacts/reference-video-frames.jpg)
 - The original logo stays in `references/`. `yms-identity.webp` is a full optimised conversion. The provisional `yms-navigation-light.webp` uses a navy wordmark with the original red accents for legibility on white. The earlier transparent derivative is used in the navy footer. The favicon is a chevron derivative.
-- The One Search logo and Railway, Flight and RTO views come from `product-assets/`. WebP crops remove the phone status strip and the test-ad portions from the Flight and RTO views. The site shows no store links or unconfirmed app functionality.
+- The supplied export folder includes Railway, Flight, Vehicle Search and a transport illustration. Selected PNG originals are kept in `product-assets/one-search-ui/`. `scripts/prepare-one-search-ui.mjs` produces the public WebP files. The Railway and Flight crops remove the blank ad area while keeping the navigation, input fields and supporting actions intact. Vehicle Search uses the full standalone export. The existing genuine app RTO overview opens the two-screen vehicle sequence because the supplied design overview highlights Flight.
+- The supplied design PDF is a wide Figma board. It was reviewed as design context. The web showcase uses the standalone selected exports and the existing RTO overview. Railway and Flight each show one entry view. The vehicle story offers the overview and dedicated lookup. The dates and inputs in the artwork are design samples.
 - The stage architecture is an original SVG in `public/media/architecture.svg`. Live 3D meshes, lighting, mock service interface textures and still renders are generated locally. The service interface and marketing visualisation represent the disciplines. One Search uses the supplied application assets.
 
 ## 3D and motion
 
 - The active scene runs in a lazy-loaded React Three Fiber canvas. Scene geometry includes a layered smartphone, responsive browser panels, a search and audience sculpture, engineering modules, the One Search phone and a brand chevron sculpture.
-- The six updated models use brushed titanium frames, matte inserts and neutral studio reflections. The phone shows application interface layers. The web model rearranges desktop, tablet and mobile panels. The marketing composition combines an illustrative search object with an audience network. The modular and chevron scenes use bevelled enamel surfaces. One Search transitions across the supplied app textures.
-- Each scene uses a prerendered WebP from its own geometry. The canvas waits for the poster and fonts, then starts at an idle opportunity. Rendering pauses off-screen. Narrow viewports use capped resolution and adjusted framing. Software rendering uses a lower pixel ratio and a 24 fps ceiling. Reduced motion and WebGL failure receive a static poster.
-- GSAP expands the selected preview from its measured browser bounds into the viewport over 0.96 seconds. The scene reference and preview share the same poster. FLIP moves the remaining preview cards, and masked text reveals the new heading and CTA. The gallery provides previous and next buttons, arrow keys, touch swipes, autoplay and a pause button.
-- GSAP handles word, line, handwriting and underline reveals. ScrollTrigger drives selected editorial masks, the process-line draw and a limited parallax treatment. Service demos use scroll-driven assembly with controls for direct exploration. Route navigation uses a restrained exit movement and a short incoming heading mask. Reduced motion disables these sequences.
+- The six scenes retain brushed titanium, matte inserts and neutral studio reflections. One Search now maps each screen using its recorded aspect ratio and blends the previous texture into the new one on the live device. The product walkthrough pairs the sticky desktop device with scroll-linked Railway, Flight and RTO chapters. Tabs and the RTO step controls remain directly usable at every width.
+- Each scene has a full poster and a smaller image for the preview rail. The canvas waits for the poster, fonts and an initial paint opportunity. Rendering pauses off-screen. Software rendering starts at 0.64 pixel ratio with a 20 fps ceiling and a smaller environment map. Reduced motion and WebGL failure receive a static view.
+- GSAP runs the 1.04-second shared-element morph by revealing a fixed viewport stage with a rounded clip. The preview artwork moves with a uniform transform. FLIP repositions the rail, and the matching poster holds the destination until the new model is ready. Manual selection, autoplay, keyboard navigation, swipes and focus remain available.
+- GSAP coordinates word masks, handwritten reveals, underlines and restrained paragraph entrances. ScrollTrigger drives the process line and limited parallax. Service demos retain scroll-driven controls, with route headings revealing as navigation completes. The header stays in view as users scroll.
 
 ## Development and deployment
 
@@ -61,18 +62,19 @@ npm ci
 npm run dev -- --webpack --hostname 127.0.0.1 --port 3000
 ```
 
-For a production-style local preview, stop the dev server before starting the production server on the same port.
+The production preview can run alongside the development server on a separate port.
 
 ```powershell
 npm run typecheck
 npm run lint
 npm run build
-npm start -- --hostname 127.0.0.1 --port 3000
+npm start -- --hostname 127.0.0.1 --port 3010
 # In a separate terminal
+$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3010'
 npm test
 ```
 
-Set approved deployment variables before building and configure the same values at runtime. Use the official HTTPS origin at the hosting edge and redirect other hostnames to that origin. Verify real enquiry receipt in a protected release environment. Review the published routes, sitemap, robots.txt, legal information and support links before release. For Chrome recording, run `npx playwright install ffmpeg` followed by `npm run qa:artifacts` against the build.
+Set approved deployment variables before building and configure the same values at runtime. Use the official HTTPS origin at the hosting edge and redirect other hostnames to that origin. Verify real enquiry receipt in a protected release environment. Review the published routes, sitemap, robots.txt, legal information and support links before release. For Chrome recording, run `npx playwright install ffmpeg`, set `PREVIEW_URL` to the production preview origin, and run `npm run qa:artifacts`.
 
 ### Environment
 
@@ -101,35 +103,36 @@ The receiver accepts JSON with `requestId`, `kind`, `name`, `email`, `area`, `me
 
 ## Verification
 
-The November 27, 2026 redesign passed the production build, TypeScript, ESLint and 13 distinct Playwright checks across the Chrome suite and focused checks. The typography assertion was corrected to compare actual loaded family names after normalising browser quoting. The responsive suite covered 1920, 1440, 1024, 768, 390 and 360 px. Chrome verified source-card and destination bounds, live canvas rendering, looping, rapid navigation, autoplay and pause, touch gestures, menu focus, loaded local fonts, resolved contrast, handwritten stroke drawing, scroll-driven process tracing, reduced motion, WebGL fallback, the genuine Railway screen on the live phone, routes, metadata and publication gates.
+The November 27, 2026 final refinement passed the production build, TypeScript, ESLint and all 14 Playwright checks against the local production build. The responsive suite covered 1920, 1440, 1024, 768, 390 and 360 px. Chrome verified the rounded source-card and destination clips, rapid navigation, autoplay and pause, touch gestures, menu focus, local fonts, resolved contrast, handwritten stroke drawing, the scroll-driven process line, reduced motion and WebGL fallback. A separate 1024 px check reached live WebGL on all six homepage scenes with no console or page errors. Product checks covered the genuine Railway texture on the live phone, Flight and Vehicle Search screen selection, keyboard navigation, scroll-linked chapters, and the genuine static fallback. Published pages returned 200, internal links resolved to published routes, and the 17 draft content routes returned 404.
 
-The production page tests confirmed that draft content returns 404 and the local preview lacks sitemap entries. Before the redesign, a production-handler check with a synthetic HTTPS origin produced exactly 15 sitemap URLs and excluded the drafts. The redesign passed the local HTTPS integration test for project and product support delivery, idempotency, downstream failure handling and rate limiting. Live receiving accounts and external Redis remain dependent on release configuration.
+The preview still blocks indexing, and its sitemap is empty without an approved origin. A previous production-handler check with a synthetic HTTPS origin produced exactly 15 sitemap URLs and excluded the drafts. The final Playwright suite verified rejected malformed, cross-origin, bot and disabled deletion submissions, and the unavailable-delivery state. The isolated HTTPS delivery check passed forwarding, idempotency headers, downstream error handling and rate limiting. Live receiving accounts and external Redis remain dependent on release configuration.
 
 ### Performance and evidence
 
-The before and after measurements are individual Chrome visits to loopback production builds with software WebGL and no network or CPU throttling. Desktop LCP improved in this sample and remains above the 2.5-second target. The browser frame cadence sampled for about 850 ms with the canvas visible was 5.7 fps on desktop and 15.5 fps on mobile. Hardware rendering and field LCP, CLS and INP remain to be measured. The after visits reported zero browser errors. [Before readings](artifacts/performance.json) · [After readings](artifacts/v2/performance.json)
+These are loopback production measurements in headless Chrome with forced software WebGL and no configured network or CPU throttling. The final pass had two capture runs with no browser errors. Desktop LCP exceeded the 2.5-second target in both runs. The desktop poster transferred in under 300 ms in two separate diagnostic traces, while its first paint was recorded at 3.44–3.94 s. Hardware frame cadence and field LCP, CLS and INP still need measurement. [Previous capture](artifacts/v2/performance.json) · [Latest capture](artifacts/v3/performance.json)
 
-| Metric | Before | After |
+| Metric | Daylight redesign | Final pass, two runs |
 | --- | ---: | ---: |
-| 1440 px desktop LCP | 4.01 s | 3.12 s |
-| 390 px mobile LCP | 0.64 s | 0.74 s |
-| Desktop pre-input layout shift sum | 0.001 | 0.012 |
+| 1440 px desktop LCP | 3.12 s | 4.08–8.35 s |
+| 390 px mobile LCP | 0.74 s | 0.94–1.42 s |
+| Desktop pre-input layout shift sum | 0.012 | 0.004 |
 | Mobile pre-input layout shift sum | 0 | 0 |
-| Six poster assets | 193 KiB | 153 KiB |
+| Desktop sampled software frame cadence | 5.66 fps | 6.21–6.67 fps |
+| Mobile sampled software frame cadence | 15.51 fps | 6.79–16.52 fps |
+| Six full-size posters | 153 KiB | 149 KiB |
 
-Asynchronous 3D JavaScript remains about 265 KiB gzipped. The posters are about 20% smaller and keep each scene visible while live rendering starts.
+The six dedicated rail thumbnails total 46 KiB. The active scene uses the full poster while its live model starts. Inactive cards use the smaller assets.
 
-- Desktop homepage [before](artifacts/v2/before-home-desktop.png) and [after](artifacts/v2/home-desktop.png)
-- Mobile homepage [before](artifacts/v2/before-home-mobile.png) and [after](artifacts/v2/home-mobile.png)
-- App Development [desktop](artifacts/v2/app-development-desktop.png) and [mobile](artifacts/v2/app-development-mobile.png)
-- Web Development [desktop](artifacts/v2/web-development-desktop.png) and [mobile](artifacts/v2/web-development-mobile.png)
-- Digital Marketing [desktop](artifacts/v2/digital-marketing-desktop.png) and [mobile](artifacts/v2/digital-marketing-mobile.png)
-- [One Search](artifacts/v2/one-search-mobile.png)
-- [Homepage transition recording](artifacts/v2/homepage-transition.webm) and [homepage scroll recording](artifacts/v2/homepage-scroll.webm)
+- Homepage [desktop](artifacts/v3/home-desktop.png) and [mobile](artifacts/v3/home-mobile.png)
+- App Development [desktop](artifacts/v3/app-development-desktop.png) and [mobile](artifacts/v3/app-development-mobile.png)
+- Web Development [desktop](artifacts/v3/web-development-desktop.png) and [mobile](artifacts/v3/web-development-mobile.png)
+- Digital Marketing [desktop](artifacts/v3/digital-marketing-desktop.png) and [mobile](artifacts/v3/digital-marketing-mobile.png)
+- One Search [desktop walkthrough](artifacts/v3/one-search-desktop.png), [mobile full page](artifacts/v3/one-search-mobile.png) and [vehicle lookup](artifacts/v3/one-search-vehicle-lookup.png)
+- [Homepage transition recording](artifacts/v3/homepage-transition.webm) and [One Search demo](artifacts/v3/one-search-demo.webm)
 
 ### Known limitations
 
 - The local site has no official domain or delivery credential. Forms therefore show that they are unavailable, and the preview blocks search indexing. The optional shared Redis backend requires an ingress and Redis instance to verify in the release environment.
-- Software rasterisation is visibly slower than the motion target on capable hardware. The browser can show the same scene as an optimised poster while the live model loads or when WebGL is unavailable.
+- Software rasterisation produced uneven frame cadence, and desktop LCP missed the target on this test host. The browser shows an optimised poster while the live model loads or when WebGL is unavailable.
 - React Three Fiber’s use of Three’s deprecated clock may produce a browser warning. A graphics driver can also emit shader compiler warnings.
 - Canonical metadata, search verification and release performance depend on the deployment configuration. Actual Search Console and Play Console ownership remain unverified.

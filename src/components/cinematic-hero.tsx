@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { flushSync } from "react-dom";
-import { productViews, scenePoster, scenes } from "@/content/scenes";
+import { productScreens, productViews, scenePoster, sceneThumbnail, scenes } from "@/content/scenes";
 import { Icon } from "./icon";
 import { Handwritten } from "./handwritten";
 import SceneView, { useReducedMotion, useVisible } from "./scene-view";
@@ -14,7 +14,8 @@ import SceneView, { useReducedMotion, useVisible } from "./scene-view";
 gsap.registerPlugin(Flip);
 gsap.ticker.lagSmoothing(0);
 
-const duration = 0.96;
+const duration = 1.04;
+const fullClip = "inset(0px 0px 0px 0px round 0px)";
 const autoplaySeconds = 9;
 const format = (index: number) => String(index + 1).padStart(2, "0");
 const theme = (scene: (typeof scenes)[number]) => ({
@@ -72,6 +73,7 @@ export function CinematicHero() {
   const introPlayed = useRef(false);
   const scene = scenes[index];
   const upcoming = [1, 2, 3].map((offset) => (index + offset) % scenes.length);
+  const screen = productScreens[productViews[productView].screens[0]];
 
   const change = useCallback((destination: number, manual = true) => {
     const target = (destination + scenes.length) % scenes.length;
@@ -84,6 +86,7 @@ export function CinematicHero() {
     if (!container || !overlay || !overlayArt || !stage) return;
     entranceAnimation.current?.revert();
     entranceAnimation.current = null;
+    titleAnimation.current?.kill();
     if (reduced) {
       current.current = target;
       setIndex(target);
@@ -110,27 +113,37 @@ export function CinematicHero() {
     overlay.style.setProperty("--scene-accent", next.accent);
     overlay.dataset.model = next.id;
     overlayArt.style.backgroundImage = `url("${scenePoster(next.id)}")`;
+    const left = bounds.left - viewport.left;
+    const top = bounds.top - viewport.top;
+    const radius = getComputedStyle(source!).borderTopLeftRadius;
+    const size = Math.min(stageBounds.width, stageBounds.height);
+    const position = (box: DOMRect) => ({
+      x: box.left - viewport.left + (box.width - size) / 2,
+      y: box.top - viewport.top + (box.height - size) / 2,
+    });
 
     gsap.set(overlay, {
-      visibility: "visible", opacity: 1, x: bounds.left - viewport.left, y: bounds.top - viewport.top,
-      width: bounds.width, height: bounds.height, borderRadius: getComputedStyle(source!).borderRadius,
+      visibility: "visible", opacity: 1,
+      clipPath: `inset(${top}px ${viewport.width - left - bounds.width}px ${viewport.height - top - bounds.height}px ${left}px round ${radius})`,
     });
-    gsap.set(overlayArt, { x: image.left - bounds.left, y: image.top - bounds.top, width: image.width, height: image.height });
-    // Keep the set at its final raster size while the outer card grows around it.
-    gsap.set(overlayLayers, { opacity: 0, width: viewport.width, height: viewport.height });
+    gsap.set(overlayArt, {
+      ...position(image), width: size, height: size, scale: Math.min(image.width, image.height) / size,
+    });
+    // Reveal the fixed set with a clip and move the artwork by transform, without resizing the stage.
+    gsap.set(overlayLayers, { opacity: 0 });
     if (card) gsap.set(card, { opacity: 0 });
     const timeline = gsap.timeline();
     animation.current = timeline;
-    if (outgoing?.length) timeline.to(outgoing, { yPercent: -112, duration: 0.31, stagger: 0.035, ease: "power2.in" }, 0);
+    if (outgoing?.length) timeline.to(outgoing, { yPercent: -106, opacity: .35, duration: .3, stagger: .027, ease: "power2.in" }, .05);
     timeline.to(overlay, {
-      x: 0, y: 0, width: viewport.width, height: viewport.height, borderRadius: 0,
+      clipPath: fullClip,
       duration, ease: "power3.inOut",
     }, 0);
     timeline.to(overlayArt, {
-      x: stageBounds.left - viewport.left, y: stageBounds.top - viewport.top, width: stageBounds.width, height: stageBounds.height,
+      ...position(stageBounds), scale: 1,
       duration, ease: "power3.inOut",
     }, 0);
-    timeline.to(overlayLayers, { opacity: (_, element) => element.classList.contains("architecture") ? 0.92 : 1, duration: 0.64 }, 0.20);
+    timeline.to(overlayLayers, { opacity: 1, duration: .59, ease: "power2.inOut" }, .25);
     timeline.call(() => {
       current.current = target;
       flushSync(() => {
@@ -139,25 +152,27 @@ export function CinematicHero() {
         if (manual) setAnnouncement(`Scene ${format(target)} of 06, ${next.label}.`);
       });
       railAnimation.current = Flip.from(saved, {
-        duration: 0.59, ease: "power3.inOut", scale: false, prune: true,
-        onEnter: (elements) => gsap.fromTo(elements, { x: 32, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, clearProps: "opacity,transform" }),
+        duration: .43, ease: "power3.out", scale: false, prune: true,
+        onEnter: (elements) => gsap.fromTo(elements, { x: 20, opacity: 0 }, { x: 0, opacity: 1, duration: .38, clearProps: "opacity,transform" }),
       });
       if (focusWasOnCard) {
         const nextCard = cards.current.get((target + 1) % scenes.length);
         (nextCard ?? container.querySelector<HTMLButtonElement>("[data-next]"))?.focus({ preventScroll: true });
       }
       if (headline.current) titleAnimation.current = revealTitle(headline.current);
-    }, [], 0.93);
-    timeline.to(overlay, { opacity: 0, duration: 0.24, ease: "power1.inOut" }, duration);
-    timeline.to(stage, { scale: .96, opacity: .78, duration: .7, ease: "power2.inOut", clearProps: "transform,opacity" }, .05);
-    timeline.set(overlay, { visibility: "hidden" }, duration + 0.24);
-    // Leave the current GPU scene in place until card, text and rail choreography have completed.
+      const counter = container.querySelector(".scene-counter b");
+      if (counter) gsap.fromTo(counter, { y: 4, opacity: .55 }, {
+        y: 0, opacity: 1, duration: .26, clearProps: "transform,opacity",
+      });
+    }, [], .98);
+    timeline.to(overlay, { opacity: 0, duration: .16, ease: "power1.out" }, duration);
+    timeline.set(overlay, { visibility: "hidden" }, duration + .16);
     timeline.call(() => {
       animation.current = null;
       if (card?.isConnected) gsap.set(card, { clearProps: "opacity" });
       setRenderIndex(target);
       setBusy(false);
-    }, [], 1.68);
+    }, [], 1.26);
   }, [reduced, root]);
 
   useEffect(() => {
@@ -166,8 +181,8 @@ export function CinematicHero() {
     introPlayed.current = true;
     const entrance = revealTitle(headline.current, true);
     entranceAnimation.current = entrance;
-    if (art.current) entrance.fromTo(art.current, { x: 22, y: 16, scale: .96 }, {
-      x: 0, y: 0, scale: 1, duration: .9, ease: "power3.out", clearProps: "transform",
+    if (art.current) entrance.fromTo(art.current, { x: 15, y: 12 }, {
+      x: 0, y: 0, duration: .78, ease: "power3.out", clearProps: "transform",
     }, .25);
     if (rail.current) entrance.fromTo(rail.current.children, { y: 14, opacity: .65 }, {
       y: 0, opacity: 1, duration: .44, stagger: .065, clearProps: "transform,opacity",
@@ -192,7 +207,7 @@ export function CinematicHero() {
         preview.fetchPriority = "low";
         preview.src = scenePoster(entry.id);
       }
-    }, 500);
+    }, 1700);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -219,12 +234,12 @@ export function CinematicHero() {
   }, [autoplay, busy, focus, hover, index, reduced, visible]);
 
   useEffect(() => {
-    if (scene.id !== "product" || !visible || !autoplay || busy || reduced) return;
+    if (scene.id !== "product" || !visible || !autoplay || busy || reduced || hover || focus) return;
     const timer = window.setInterval(() => {
       if (!document.hidden) setProductView((current) => (current + 1) % productViews.length);
     }, 2_750);
     return () => window.clearInterval(timer);
-  }, [autoplay, busy, reduced, scene.id, visible]);
+  }, [autoplay, busy, focus, hover, reduced, scene.id, visible]);
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
@@ -262,11 +277,11 @@ export function CinematicHero() {
       </div>
       <div className="hero-art" data-current-render={renderIndex === index} ref={art} aria-hidden="true">
         {scene.id === "product" && productView > 0 ? (
-          <div className="product-static-phone"><Image src={productViews[productView].image} alt="" width={240} height={485} unoptimized /></div>
+          <div className="product-static-phone"><Image key={screen.image} src={screen.image} alt="" width={screen.width} height={screen.height} unoptimized /></div>
         ) : (
           <Image className="hero-poster" key={scene.id} src={scenePoster(scene.id)} alt="" width={760} height={760} sizes="(max-width: 760px) 85vw, 57vw" priority={index === 0} unoptimized />
         )}
-        <SceneView id={scenes[renderIndex].id} productView={productView} paused={busy} />
+        <SceneView id={scenes[renderIndex].id} productView={productViews[productView].screens[0]} paused={busy} />
       </div>
       <div className="hero-shade" aria-hidden="true" />
       <div className="scene-flight stage-backdrop" ref={flight} aria-hidden="true">
@@ -308,7 +323,7 @@ export function CinematicHero() {
                   aria-label={`Show scene ${format(item)}, ${preview.label}`} onClick={() => { if (performance.now() >= ignoreTapUntil.current) change(item); }}>
                   <span className="preview-index">{format(item)}</span>
                   <span className="preview-art">
-                    <Image src={scenePoster(preview.id)} alt="" fill sizes="(max-width: 760px) 27vw, 12vw" loading="eager" unoptimized />
+                    <Image src={sceneThumbnail(preview.id)} alt="" fill sizes="(max-width: 760px) 27vw, 12vw" fetchPriority="low" unoptimized />
                   </span>
                   <span className="preview-text">{preview.card.map((line) => <span key={line}>{line}</span>)}</span>
                 </button>

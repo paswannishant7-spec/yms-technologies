@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 
 const base = process.env.PREVIEW_URL ?? "http://127.0.0.1:3000";
-const output = "artifacts/v2";
+const output = "artifacts/v3";
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({
   channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL ?? "chrome",
@@ -11,6 +11,20 @@ const browser = await chromium.launch({
 
 const timings = [];
 const round = (value) => typeof value === "number" ? Math.round(value * 1000) / 1000 : null;
+async function showOpeningScene(page) {
+  await page.getByRole("button", { name: "Pause autoplay" }).click();
+  const hero = page.locator(".cinematic-hero");
+  const order = ["mobile", "web", "marketing", "technology", "product", "brand"];
+  for (let index = order.indexOf(await hero.getAttribute("data-scene")); index > 0; index--) {
+    await page.locator(".scene-flight").waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: "Previous scene" }).click();
+    await hero.and(page.locator(`[data-scene='${order[index - 1]}']`)).waitFor();
+    await page.locator(".scene-flight").waitFor({ state: "hidden" });
+    await page.waitForTimeout(350);
+  }
+  await page.mouse.move(2, 2);
+}
+
 async function screenshot(name, viewport, path = "/", mobile = false, fullPage = false) {
   const context = await browser.newContext({ viewport, hasTouch: mobile, isMobile: mobile,
     reducedMotion: fullPage ? "reduce" : "no-preference" });
@@ -21,7 +35,10 @@ async function screenshot(name, viewport, path = "/", mobile = false, fullPage =
     if (path === "/") await page.addInitScript(() => {
       window.captureMetrics = { lcp: null, shifts: 0, errors: [] };
       new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) window.captureMetrics.lcp = entry.startTime;
+        for (const entry of list.getEntries()) {
+          window.captureMetrics.lcp = entry.startTime;
+          window.captureMetrics.lcpElement = entry.element?.className || entry.element?.tagName;
+        }
       }).observe({ type: "largest-contentful-paint", buffered: true });
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.captureMetrics.shifts += entry.value;
@@ -53,10 +70,10 @@ async function screenshot(name, viewport, path = "/", mobile = false, fullPage =
       });
       timings.push({ name, viewport, lcpMs: round(metrics.lcp), layoutShiftSum: round(metrics.shifts),
         domContentLoadedMs: round(metrics.domContentLoaded), softwareFrameSampleFps: round(metrics.frameRate),
+        lcpElement: metrics.lcpElement ?? null,
         browserErrors: [...new Set([...metrics.errors, ...consoleErrors])] });
-      await page.getByRole("button", { name: "Pause autoplay" }).click();
-      await page.locator(".cinematic-hero").evaluate((element) => element.blur());
-      await page.mouse.move(2, 2);
+      await showOpeningScene(page);
+      await page.locator('.hero-art [data-renderer="webgl"]').waitFor({ timeout: 35_000 });
     }
     await page.screenshot({ path: `${output}/${name}.png`, fullPage });
     console.log(`Saved ${name}.png`);
@@ -86,8 +103,7 @@ try {
   try {
     await page.goto(base, { waitUntil: "networkidle" });
     await page.locator('.hero-art [data-renderer="webgl"]').waitFor({ timeout: 25_000 });
-    await page.getByRole("button", { name: "Pause autoplay" }).click();
-    await page.mouse.move(2, 2);
+    await showOpeningScene(page);
     await page.waitForTimeout(450);
     await page.getByRole("button", { name: "Show scene 02, Web Development" }).click();
     await page.locator(".cinematic-hero[data-scene='web']").waitFor();
@@ -107,23 +123,29 @@ try {
     if (video) await video.saveAs(`${output}/homepage-transition.webm`);
   }
 
-  const scrollContext = await browser.newContext({
-    viewport: { width: 1280, height: 820 },
-    recordVideo: { dir: ".preview/video", size: { width: 1280, height: 820 } },
+  const demoContext = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    recordVideo: { dir: ".preview/video", size: { width: 1280, height: 900 } },
   });
-  const scrollPage = await scrollContext.newPage();
+  const demo = await demoContext.newPage();
   try {
-    await scrollPage.goto(base, { waitUntil: "networkidle" });
-    await scrollPage.getByRole("button", { name: "Pause autoplay" }).click();
-    for (const selector of [".home-intro", ".expertise-band", ".product-band", ".process-band", ".technology-split"]) {
-      await scrollPage.locator(selector).evaluate((element) => element.scrollIntoView({ behavior: "smooth", block: "start" }));
-      await scrollPage.waitForTimeout(1_250);
-    }
-    await scrollPage.waitForTimeout(750);
+    await demo.goto(base + "/products/one-search", { waitUntil: "networkidle" });
+    await demo.getByRole("link", { name: "Explore the app" }).click();
+    await demo.locator("#one-search-tour").evaluate((element) => element.scrollIntoView({ block: "start", behavior: "instant" }));
+    const stage = demo.locator(".product-experience");
+    await stage.locator('[data-renderer="webgl"]').waitFor({ timeout: 25_000 });
+    await demo.waitForTimeout(850);
+    await demo.screenshot({ path: `${output}/one-search-desktop.png` });
+    await demo.getByRole("tab", { name: "Flight" }).click();
+    await demo.waitForTimeout(850);
+    await demo.getByRole("tab", { name: "RTO" }).click();
+    await demo.getByRole("button", { name: "Vehicle lookup", exact: true }).click();
+    await demo.waitForTimeout(1100);
+    await demo.screenshot({ path: `${output}/one-search-vehicle-lookup.png` });
   } finally {
-    const video = scrollPage.video();
-    await scrollContext.close();
-    if (video) await video.saveAs(`${output}/homepage-scroll.webm`);
+    const video = demo.video();
+    await demoContext.close();
+    if (video) await video.saveAs(`${output}/one-search-demo.webm`);
   }
 } finally {
   await browser.close();

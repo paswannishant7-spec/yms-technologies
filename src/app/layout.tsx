@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${jakarta.variable} ${dm.variable} ${caveat.variable}`}>
+    <html lang="en-IN" data-scroll-behavior="smooth" className={`${jakarta.variable} ${dm.variable} ${caveat.variable}`}>
       <body>
         <a href="#main-content" className="skip-link">Skip to content</a>
         <Header />

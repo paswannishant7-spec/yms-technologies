@@ -40,7 +40,7 @@ export function ProductFeature({ interactive = false }: { interactive?: boolean 
         <Link href="/products/one-search" className="button">Discover One Search <Icon name="up-right" size={16} /></Link>
       </div>
       {interactive ? <ProductExplorer /> :
-        <div className="product-feature-art" aria-hidden="true"><Image src={scenePoster("product")} alt="" width={720} height={720} unoptimized /></div>}
+        <div className="product-feature-art" aria-hidden="true"><Image src="/media/one-search-ui/transport-art.webp" alt="" width={296} height={185} unoptimized /></div>}
     </div>
   );
 }

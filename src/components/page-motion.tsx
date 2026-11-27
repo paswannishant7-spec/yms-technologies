@@ -51,6 +51,11 @@ export function PageMotion() {
           strokeDashoffset: 0, duration: .53, clearProps: "strokeDashoffset",
         }, .56);
       }
+      for (const copy of gsap.utils.toArray<HTMLElement>("[data-copy-reveal]")) {
+        gsap.from(copy, { y: 7, opacity: .88, duration: .38, clearProps: "opacity,transform",
+          scrollTrigger: { trigger: copy, start: "top 93%", once: true },
+        });
+      }
       for (const art of gsap.utils.toArray<HTMLElement>("[data-parallax]")) {
         gsap.fromTo(art, { y: 24 }, {
           y: -18, ease: "none", scrollTrigger: { trigger: art.parentElement, start: "top bottom", end: "bottom top", scrub: .45 },

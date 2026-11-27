@@ -28,7 +28,9 @@ test("the selected preview expands from its measured card and activates live 3D"
     const observer = new MutationObserver((changes) => {
       for (const css of [element.getAttribute("style"), ...changes.map((change) => change.oldValue)]) {
         sample.cssText = css ?? "";
-        if (sample.visibility === "visible" && Math.abs(parseFloat(sample.width) - sourceWidth) < 1.5 && parseFloat(sample.borderRadius) > 0) {
+        const clip = sample.clipPath.match(/-?[\d.]+px/g)?.map(parseFloat);
+        if (sample.visibility === "visible" && clip?.length === 5 &&
+          Math.abs(element.clientWidth - clip[1] - clip[3] - sourceWidth) < 1.5 && clip[4] > 0) {
           element.setAttribute("data-observed-card-start", "true");
           observer.disconnect();
           break;
@@ -44,7 +46,7 @@ test("the selected preview expands from its measured card and activates live 3D"
   await expect(scene.getByRole("heading", { name: "Websites that work beautifully." })).toBeVisible();
   await expect(flight).toBeHidden();
   await expect(flight).toHaveCSS("width", "1280px");
-  await expect(flight).toHaveCSS("border-radius", "0px");
+  await expect(flight).toHaveCSS("clip-path", /inset\(0px/);
   await expect(scene.getByRole("button", { name: "Show scene 03, Digital Marketing" })).toBeFocused();
   await expect(scene.locator('[data-renderer="webgl"]')).toHaveCount(1, { timeout: 25_000 });
   expect(errors).toEqual([]);
@@ -234,6 +236,7 @@ test("product tabs and the route transition work with keyboard navigation", asyn
   await stage.scrollIntoViewIfNeeded();
   await expect(stage.locator('[data-renderer="webgl"]')).toHaveCount(1, { timeout: 20_000 });
   await expect(stage.locator(".scene-canvas")).toHaveCSS("opacity", "1");
+  await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/railway.webp");
   const liveFrame = await stage.locator("canvas").screenshot();
   const pixels = await sharp(liveFrame).resize(210).removeAlpha().raw().toBuffer();
   let orange = 0;
@@ -245,10 +248,26 @@ test("product tabs and the route transition work with keyboard navigation", asyn
   await tab.focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "Flight" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel")).toContainText("look up flights");
+  await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/flight.webp");
   await page.keyboard.press("End");
   await expect(page.getByRole("tab", { name: "RTO" })).toBeFocused();
-  await expect(page.getByRole("tabpanel")).toContainText("vehicle and transport information");
+  await expect(page.getByRole("tabpanel")).toContainText("vehicle number");
+  await page.getByRole("button", { name: "Vehicle lookup", exact: true }).click();
+  await expect(stage.locator("img")).toHaveAttribute("src", "/media/one-search-ui/vehicle-search.webp");
+  await expect(page.getByRole("button", { name: "Vehicle lookup", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the One Search walkthrough follows scroll and falls back to the genuine static screens", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/products/one-search");
+  const stage = page.locator(".product-walkthrough");
+  await page.locator('[data-product-chapter="1"]').evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await expect(stage.getByRole("tab", { name: "Flight" })).toHaveAttribute("aria-selected", "true");
+  await expect(stage.locator(".product-static-phone img")).toHaveAttribute("src", "/media/one-search-ui/flight.webp");
+  await page.locator('[data-product-chapter="2"]').evaluate((element) => element.scrollIntoView({ block: "center" }));
+  await expect(stage.getByRole("tab", { name: "RTO" })).toHaveAttribute("aria-selected", "true");
+  await expect(stage.locator("canvas")).toHaveCount(0);
 });
 
 test("published pages have unique metadata and internal links resolve", async ({ page }) => {
@@ -266,7 +285,7 @@ test("published pages have unique metadata and internal links resolve", async ({
     expect(description).toBeTruthy();
     descriptions.add(description);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", title);
-    for (const href of await page.locator('a[href^="/"]').evaluateAll((links) => links.map((link) => link.getAttribute("href")!))) internal.add(href);
+    for (const path of await page.locator('a[href^="/"]').evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).pathname))) internal.add(path);
   }
   expect(titles.size).toBe(publishedPaths.length);
   expect(descriptions.size).toBe(publishedPaths.length);

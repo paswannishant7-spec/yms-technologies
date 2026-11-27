@@ -52,7 +52,7 @@ function Navigation({ path, entries }: { path: string; entries: readonly NavItem
     <header className="site-header" ref={root}>
       <div className="nav-shell">
         <Link href="/" className="brand-link" aria-label="YMS Technologies home" onClick={close}>
-          <Image src="/media/yms-navigation-light.webp" width={106} height={53} alt="" priority unoptimized />
+          <Image src="/media/yms-navigation-light.webp" width={106} height={53} alt="" loading="eager" unoptimized />
         </Link>
         <button ref={toggle} className="nav-toggle icon-button" type="button" aria-label={mobile ? "Close navigation" : "Open navigation"}
           aria-controls="primary-navigation" aria-expanded={mobile} onClick={() => { setMobile(!mobile); setOpen(null); }}>

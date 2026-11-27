@@ -22,6 +22,7 @@ try {
     await page.waitForFunction(() => getComputedStyle(document.querySelector(".scene-canvas")).opacity === "1");
     const render = await page.screenshot({ omitBackground: true, animations: "disabled" });
     await sharp(render).webp({ quality: 90, alphaQuality: 96 }).toFile(`public/media/scene-${id}.webp`);
+    await sharp(render).resize(300).webp({ quality: 83, alphaQuality: 90 }).toFile(`public/media/scene-${id}-thumb.webp`);
     console.log(`Captured ${id}`);
   }
   const arch = await sharp("public/media/architecture.svg").resize(1200, 630, { fit: "cover" }).png().toBuffer();

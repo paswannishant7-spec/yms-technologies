@@ -3,8 +3,8 @@
 import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Canvas, useFrame, useThree, type ThreeElements } from "@react-three/fiber";
 import { Environment, Lightformer, RoundedBox, useTexture } from "@react-three/drei";
-import { CanvasTexture, Color, Group, MathUtils, Quaternion, SRGBColorSpace, Vector3, type MeshBasicMaterial, type Texture } from "three";
-import { productViews, scenes, type SceneId } from "@/content/scenes";
+import { CanvasTexture, Color, Group, MathUtils, Quaternion, SRGBColorSpace, Vector3, type Mesh, type MeshBasicMaterial, type Texture } from "three";
+import { productScreens, scenes, type SceneId } from "@/content/scenes";
 
 type PlateProps = ThreeElements["group"] & {
   size: [number, number, number];
@@ -145,30 +145,46 @@ function PaintedSurface({ kind, width, height, depth }: { kind: Parameters<typeo
 
 function ProductSurface({ index }: { index: number }) {
   const material = useRef<MeshBasicMaterial>(null);
+  const outgoing = useRef<Mesh>(null);
+  const outgoingMaterial = useRef<MeshBasicMaterial>(null);
   const previous = useRef(index);
-  const maps = useTexture(productViews.map(({ image }) => image), (textures) => {
+  const maps = useTexture(productScreens.map(({ image }) => image), (textures) => {
     textures.forEach((texture) => {
       texture.colorSpace = SRGBColorSpace;
       texture.anisotropy = 4;
     });
   });
   useFrame((_, delta) => {
-    if (!material.current) return;
+    if (!material.current || !outgoing.current || !outgoingMaterial.current) return;
     if (previous.current !== index) {
+      const old = productScreens[previous.current];
+      const width = Math.min(1.52, 3.23 * old.width / old.height);
+      const height = width * old.height / old.width;
+      outgoing.current.scale.set(width, height, 1);
+      outgoing.current.position.y = (3.23 - height) / 2;
+      outgoingMaterial.current.map = maps[previous.current];
+      outgoing.current.visible = true;
       previous.current = index;
-      material.current.opacity = .25;
+      material.current.opacity = 0;
     }
     material.current.opacity = MathUtils.damp(material.current.opacity, 1, 15, delta);
+    if (material.current.opacity > .995) outgoing.current.visible = false;
   });
-  const height = [3.21, 2.39, 2.09][index];
+  const screen = productScreens[index];
+  const width = Math.min(1.52, 3.23 * screen.width / screen.height);
+  const height = width * screen.height / screen.width;
   return (
     <group>
       <mesh position={[0, 0, 0.079]}>
         <planeGeometry args={[1.57, 3.23]} />
         <meshBasicMaterial color="#fff8ef" />
       </mesh>
-      <mesh position={[0, (3.23 - height) / 2, 0.087]}>
-        <planeGeometry args={[1.52, height]} />
+      <mesh ref={outgoing} position={[0, 0, .083]} visible={false}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial ref={outgoingMaterial} map={maps[index]} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, (3.23 - height) / 2, 0.087]} scale={[width, height, 1]}>
+        <planeGeometry args={[1, 1]} />
         <meshBasicMaterial ref={material} map={maps[index]} toneMapped={false} transparent depthWrite={false} />
       </mesh>
     </group>
@@ -420,33 +436,27 @@ function SoftwareFrames({ active }: { active: boolean }) {
   const invalidate = useThree((state) => state.invalidate);
   useEffect(() => {
     if (!active) return;
-    const timer = window.setInterval(() => invalidate(), 1000 / 24);
+    const timer = window.setInterval(() => { if (!document.hidden) invalidate(); }, 1000 / 20);
     return () => window.clearInterval(timer);
   }, [active, invalidate]);
   return null;
 }
 
-export default function SceneCanvas({ id, paused, scroll, productView, capture, onReady, onFailure }: {
-  id: SceneId; paused: boolean; scroll: number; productView: number; capture: boolean;
+export default function SceneCanvas({ id, paused, scroll, productView, capture, software, onReady, onFailure }: {
+  id: SceneId; paused: boolean; scroll: number; productView: number; capture: boolean; software: boolean;
   onReady: (id: SceneId) => void; onFailure: () => void;
 }) {
   const settings = scenes.find((scene) => scene.id === id)!;
-  const [software, setSoftware] = useState(false);
   const compact = typeof window !== "undefined" && window.innerWidth < 800;
   return (
     <CanvasBoundary onFailure={onFailure}>
       <Canvas
-        dpr={capture ? 1 : software ? 0.8 : [1, compact ? 1.15 : 1.55]}
+        dpr={capture ? 1 : software ? 0.64 : [1, compact ? 1.15 : 1.5]}
         camera={{ position: [0, 0, 8.8], fov: 34, near: .1, far: 35 }}
-        gl={{ alpha: true, antialias: !compact, powerPreference: "low-power" }}
+        gl={{ alpha: true, antialias: capture || (!compact && !software), powerPreference: "low-power" }}
         frameloop={paused || software ? "demand" : "always"}
         onCreated={({ gl }) => {
           gl.setClearColor(new Color("#000000"), 0);
-          const context = gl.getContext();
-          const debug = context.getExtension("WEBGL_debug_renderer_info");
-          if (!capture && debug && /swiftshader|llvmpipe|software rasterizer/i.test(context.getParameter(debug.UNMASKED_RENDERER_WEBGL))) {
-            setSoftware(true);
-          }
           gl.domElement.addEventListener("webglcontextlost", (event) => {
             event.preventDefault();
             onFailure();
@@ -459,7 +469,7 @@ export default function SceneCanvas({ id, paused, scroll, productView, capture, 
         <directionalLight position={[4, 3, -3]} color={settings.light} intensity={1.75} />
         <directionalLight position={[1, -4, 1]} color="#e9f5ff" intensity={.74} />
         <Suspense fallback={null}>
-          <Environment resolution={compact || software ? 48 : 72} frames={1}>
+          <Environment resolution={software ? 32 : compact ? 48 : 72} frames={1}>
             <Lightformer intensity={2.35} position={[-3, 4, 2]} rotation={[0, Math.PI / 4, 0]} scale={[3, 6, 1]} />
             <Lightformer intensity={1.4} position={[3, -1, 3]} rotation={[0, -Math.PI / 3, 0]} scale={[1.4, 6, 1]} color="#f7faff" />
             <Lightformer intensity={1.45} position={[1, 3, -4]} rotation={[0, Math.PI, 0]} scale={[5, 2, 1]} color={settings.light} />
